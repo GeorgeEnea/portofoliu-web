@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevizAuto Pro</title>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary);
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1250px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .left-panel {
+            flex: 2;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .input-group select,
+        .search-bar,
+        .custom-input {
+            background: var(--bg-main);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+
+        .input-group select:focus,
+        .search-bar:focus,
+        .custom-input:focus {
+            border-color: var(--primary);
+        }
+
+        .input-group select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #parts-section {
+            display: none;
+        }
+
+        .search-bar {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        .parts-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            max-height: 550px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .part-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            transition: 0.2s;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .part-item:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .part-info h4 {
+            margin: 0 0 5px 0;
+            font-size: 15px;
+        }
+
+        .part-info p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .part-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .quality-select {
+            padding: 6px;
+            border-radius: 4px;
+            background: var(--bg-main);
+            color: white;
+            border: 1px solid var(--border);
+            font-size: 12px;
+            outline: none;
+        }
+
+        .part-price {
+            text-align: right;
+            min-width: 100px;
+        }
+
+        .part-price .price {
+            display: block;
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 16px;
+        }
+
+        .part-price .labor {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .btn-add {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-add:hover {
+            background: var(--primary-hover);
+            transform: scale(1.05);
+        }
+
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .right-panel {
+            flex: 1;
+            min-width: 320px;
+        }
+
+        .invoice-card {
+            position: sticky;
+            top: 20px;
+        }
+
+        .cart-items {
+            min-height: 100px;
+            max-height: 350px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            padding-right: 5px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--border);
+            font-size: 14px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .cart-item-name {
+            flex: 1;
+            padding-right: 10px;
+        }
+
+        .cart-item-remove {
+            color: var(--danger);
+            cursor: pointer;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-weight: bold;
+            padding: 4px 8px;
+            transition: 0.2s;
+        }
+
+        .cart-item-remove:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .empty-cart {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+            font-style: italic;
+        }
+
+        .custom-add-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .custom-add-box input {
+            flex: 1;
+        }
+
+        .custom-add-box input[type="number"] {
+            max-width: 100px;
+        }
+
+        .btn-custom {
+            background: var(--border);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-custom:hover {
+            background: var(--text-muted);
+        }
+
+        .invoice-summary {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .summary-row.vat {
+            color: var(--text-main);
+            font-size: 13px;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--success);
+        }
+
+        .btn-print {
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.2s;
+        }
+
+        .btn-print:hover {
+            background: #059669;
+        }
+
+        .btn-print:disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+        }
+
+        .toast {
+            padding: 12px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            animation: slideInRight 0.3s ease-out forwards;
+            opacity: 0;
+            transform: translateX(100%);
+        }
+
+        .toast.success {
+            background: var(--success);
+            border-left: 4px solid #064e3b;
+        }
+
+        .toast.warning {
+            background: var(--warning);
+            border-left: 4px solid #78350f;
+        }
+
+        .toast.danger {
+            background: var(--danger);
+            border-left: 4px solid #7f1d1d;
+        }
+
+        .toast.fade-out {
+            animation: fadeOutRight 0.3s ease-in forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOutRight {
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                color: black;
+                padding: 0;
+            }
+
+            .left-panel,
+            .header p,
+            .btn-print,
+            .cart-item-remove,
+            .custom-add-box,
+            #toast-container,
+            .btn-custom {
+                display: none !important;
+            }
+
+            .right-panel {
+                flex: 1;
+                width: 100%;
+            }
+
+            .invoice-card {
+                border: none;
+                box-shadow: none;
+            }
+
+            .invoice-card h2 {
+                color: black;
+                border-bottom: 2px solid black;
+            }
+
+            .cart-item {
+                border-bottom: 1px solid #ccc;
+            }
+
+            .cart-item-name {
+                color: black;
+            }
+
+            .cart-item-name span {
+                color: #555 !important;
+            }
+
+            .invoice-summary {
+                background: transparent;
+                border: 2px solid black;
+            }
+
+            .summary-row,
+            .summary-row.vat,
+            .summary-total {
+                color: black;
+            }
+
+            body::before {
+                content: "DEVIZ ESTIMATIV REPARAȚII AUTO";
+                display: block;
+                font-size: 24px;
+                font-weight: bold;
+                text-align: center;
+                margin-bottom: 20px;
+                color: black;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>🔧 DevizAuto Pro <span
+                style="font-size: 14px; background: var(--success); color: white; padding: 2px 8px; border-radius: 12px; vertical-align: middle;">Enterprise</span>
+        </h1>
+        <p>Sistem integrat de estimare piese și manoperă service</p>
+    </div>
+
+    <div class="container">
+        <div class="left-panel">
+            <div class="card">
+                <h2>1. Identificare Vehicul</h2>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Marcă</label>
+                        <select id="select-make" onchange="handleMakeChange()">
+                            <option value="">-- Alege Marca --</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Model</label>
+                        <select id="select-model" onchange="handleModelChange()" disabled>
+                            <option value="">-- Alege Model --</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>An Fabricație</label>
+                        <select id="select-year" onchange="handleYearChange()" disabled>
+                            <option value="">-- Alege Anul --</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Motorizare</label>
+                        <select id="select-engine" onchange="loadPartsCatalog()" disabled>
+                            <option value="">-- Alege Motor --</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="parts-section">
+                <h2>2. Catalog Piese <span id="car-badge"
+                        style="font-size: 12px; color: var(--primary); background: rgba(59,130,246,0.1); padding: 4px 8px; border-radius: 12px;"></span>
+                </h2>
+                <input type="text" id="part-search" class="search-bar"
+                    placeholder="🔍 Caută piesă (ex: frână, distribuție, ulei)..." onkeyup="handleSearch()">
+                <div class="parts-grid" id="parts-list"></div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="card invoice-card">
+                <h2>📋 Deviz Comercial</h2>
+                <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;"
+                    id="deviz-car-name">Nicio mașină selectată</div>
+
+                <div class="cart-items" id="cart-items">
+                    <div class="empty-cart">Devizul este gol.</div>
+                </div>
+
+                <div class="custom-add-box" id="custom-add-box" style="display: none;">
+                    <input type="text" id="custom-name" class="custom-input" placeholder="Serviciu / Piesă manuală...">
+                    <input type="number" id="custom-price" class="custom-input" placeholder="Preț (RON)">
+                    <button class="btn-custom" onclick="addCustomItem()">Adaugă</button>
+                </div>
+
+                <div class="invoice-summary">
+                    <div class="summary-row">
+                        <span>Subtotal Piese:</span>
+                        <span id="subtotal-parts">0.00 RON</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Subtotal Manoperă:</span>
+                        <span id="subtotal-labor">0.00 RON</span>
+                    </div>
+                    <div class="summary-row vat">
+                        <span>TVA (19%):</span>
+                        <span id="tva-value">0.00 RON</span>
+                    </div>
+                    <div class="summary-total">
+                        <span>TOTAL DE PLATĂ:</span>
+                        <span id="grand-total">0.00 RON</span>
+                    </div>
+                </div>
+
+                <button class="btn-print" id="btn-print" onclick="window.print()" disabled>📥 Descarcă Factură / Deviz
+                    (PDF)</button>
+                <button class="btn-custom"
+                    style="width: 100%; margin-top: 10px; background: rgba(239, 68, 68, 0.2); color: var(--danger);"
+                    onclick="clearCart(true)">🗑️ Golește Devizul</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        const carDatabase = {
+            "Dacia": {
+                multiplier: 1.0,
+                models: {
+                    "Logan": { years: ["2015", "2018", "2021", "2024"], engines: ["1.0 SCe (73 CP)", "0.9 TCe (90 CP)", "1.0 TCe ECO-G (100 CP)", "1.5 dCi (95 CP)"] },
+                    "Duster": { years: ["2016", "2019", "2022", "2024"], engines: ["1.6 SCe (115 CP)", "1.5 dCi (115 CP)", "1.3 TCe (150 CP)", "Hybrid 140"] },
+                    "Sandero Stepway": { years: ["2017", "2021", "2023"], engines: ["1.0 SCe (65 CP)", "1.0 TCe (90 CP)", "1.5 dCi (75 CP)"] },
+                    "Spring": { years: ["2021", "2024"], engines: ["Electric 45 CP", "Electric 65 CP"] }
+                }
+            },
+            "Renault": {
+                multiplier: 1.15,
+                models: {
+                    "Clio V": { years: ["2019", "2021", "2023"], engines: ["1.0 TCe (100 CP)", "1.5 Blue dCi (115 CP)", "E-Tech Hybrid (140 CP)"] },
+                    "Megane IV": { years: ["2016", "2019", "2022"], engines: ["1.3 TCe (140 CP)", "1.5 dCi (110 CP)", "1.6 dCi (130 CP)"] },
+                    "Captur": { years: ["2017", "2020", "2023"], engines: ["1.0 TCe (90 CP)", "1.3 TCe (130 CP)", "Plug-in Hybrid (160 CP)"] }
+                }
+            },
+            "Skoda": {
+                multiplier: 1.25,
+                models: {
+                    "Fabia": { years: ["2015", "2018", "2022"], engines: ["1.0 MPI (75 CP)", "1.0 TSI (95 CP)", "1.2 TSI (110 CP)"] },
+                    "Octavia III / IV": { years: ["2015", "2019", "2023"], engines: ["1.0 TSI (110 CP)", "1.5 TSI (150 CP)", "2.0 TDI (150 CP)", "2.0 TDI (200 CP)"] },
+                    "Superb": { years: ["2016", "2020", "2024"], engines: ["1.5 TSI (150 CP)", "2.0 TSI (280 CP)", "2.0 TDI (190 CP)"] }
+                }
+            },
+            "Volkswagen": {
+                multiplier: 1.35,
+                models: {
+                    "Polo": { years: ["2014", "2018", "2022"], engines: ["1.0 TSI (95 CP)", "1.2 TSI (90 CP)", "1.4 TDI (90 CP)"] },
+                    "Golf VII / VIII": { years: ["2015", "2018", "2021"], engines: ["1.0 eTSI (110 CP)", "1.4 TSI (150 CP)", "2.0 TDI (150 CP)", "GTI 2.0 TSI (245 CP)"] },
+                    "Passat B8": { years: ["2015", "2019", "2022"], engines: ["1.5 TSI (150 CP)", "2.0 TDI (150 CP)", "2.0 TDI BiTurbo (240 CP)"] },
+                    "Tiguan": { years: ["2016", "2020", "2024"], engines: ["1.5 TSI (150 CP)", "2.0 TDI (150 CP)", "2.0 TDI 4Motion (200 CP)"] }
+                }
+            },
+            "Ford": {
+                multiplier: 1.25,
+                models: {
+                    "Fiesta": { years: ["2015", "2019", "2022"], engines: ["1.0 EcoBoost (100 CP)", "1.5 TDCi (85 CP)"] },
+                    "Focus": { years: ["2015", "2018", "2022"], engines: ["1.0 EcoBoost (125 CP)", "1.5 EcoBlue (120 CP)", "2.0 EcoBlue (150 CP)"] },
+                    "Kuga": { years: ["2017", "2021", "2024"], engines: ["1.5 EcoBoost (150 CP)", "2.0 EcoBlue (190 CP)", "2.5 PHEV (225 CP)"] }
+                }
+            },
+            "Audi": {
+                multiplier: 1.9,
+                models: {
+                    "A3": { years: ["2015", "2018", "2022"], engines: ["35 TFSI (150 CP)", "35 TDI (150 CP)"] },
+                    "A4 (B9)": { years: ["2016", "2019", "2023"], engines: ["40 TFSI (190 CP)", "40 TDI (190 CP)", "50 TDI (286 CP)"] },
+                    "Q5": { years: ["2017", "2021", "2024"], engines: ["40 TDI Quattro (204 CP)", "50 TFSI e (299 CP)"] }
+                }
+            },
+            "BMW": {
+                multiplier: 2.1,
+                models: {
+                    "Seria 3 (F30/G20)": { years: ["2015", "2019", "2023"], engines: ["320d (190 CP)", "320i (184 CP)", "330d (265 CP)", "330e PHEV (292 CP)"] },
+                    "Seria 5 (G30)": { years: ["2017", "2021", "2024"], engines: ["520d (190 CP)", "530d (286 CP)", "540i (340 CP)"] },
+                    "X3 / X5": { years: ["2016", "2020", "2024"], engines: ["xDrive20d (190 CP)", "xDrive30d (286 CP)", "M50d (400 CP)"] }
+                }
+            },
+            "Mercedes-Benz": {
+                multiplier: 2.2,
+                models: {
+                    "Clasa C (W205/W206)": { years: ["2015", "2019", "2023"], engines: ["C 200 d (160 CP)", "C 220 d (194 CP)", "C 300 (258 CP)"] },
+                    "Clasa E (W213)": { years: ["2017", "2021", "2024"], engines: ["E 220 d (194 CP)", "E 300 de (306 CP)", "E 400 d (330 CP)"] },
+                    "GLE / GLC": { years: ["2018", "2022"], engines: ["GLC 220 d 4MATIC", "GLE 350 d (272 CP)", "GLE 400 d (330 CP)"] }
+                }
+            }
+        };
+
+        const baseParts = [
+            { id: 1, category: "🔧 Revizie", name: "Pachet Filtre (Ulei, Aer, Polen, Combustibil)", basePrice: 400, baseLabor: 150 },
+            { id: 2, category: "🛢️ Ulei", name: "Ulei Motor Sintetic (5 Litri)", basePrice: 220, baseLabor: 0 },
+            { id: 3, category: "🛑 Frânare", name: "Set Plăcuțe Frână Față", basePrice: 180, baseLabor: 100 },
+            { id: 4, category: "🛑 Frânare", name: "Set Discuri Frână Față (2 buc)", basePrice: 450, baseLabor: 200 },
+            { id: 5, category: "🛑 Frânare", name: "Lichid Frână DOT4 + Înlocuire la aparat", basePrice: 60, baseLabor: 120 },
+            { id: 6, category: "⚙️ Distribuție", name: "Kit Distribuție + Pompă Apă", basePrice: 900, baseLabor: 700 },
+            { id: 7, category: "⚙️ Distribuție", name: "Curea Transmisie (Accesorii)", basePrice: 100, baseLabor: 100 },
+            { id: 8, category: "⚙️ Ambreiaj", name: "Kit Ambreiaj + Volantă Masă Dublă", basePrice: 2000, baseLabor: 800 },
+            { id: 9, category: "🚗 Suspensie", name: "Set Amortizoare Față (2 buc)", basePrice: 600, baseLabor: 300 },
+            { id: 10, category: "🚗 Suspensie", name: "Braț Suspensie Inferior cu bucșe (1 buc)", basePrice: 350, baseLabor: 150 },
+            { id: 11, category: "🚗 Suspensie", name: "Bielete Antiruliu (Set 2 buc)", basePrice: 150, baseLabor: 100 },
+            { id: 12, category: "🔋 Electric", name: "Baterie Auto Start-Stop AGM", basePrice: 700, baseLabor: 50 },
+            { id: 13, category: "🔋 Electric", name: "Alternator / Electromotor", basePrice: 900, baseLabor: 250 },
+            { id: 14, category: "💡 Iluminat", name: "Set Becuri Xenon / LED (2 buc)", basePrice: 400, baseLabor: 50 },
+            { id: 15, category: "❄️ Climatizare", name: "Încărcare Freon Instalație AC", basePrice: 200, baseLabor: 150 },
+            { id: 16, category: "🛞 Anvelope", name: "Anvelopă (1 buc) + Dejantat/Echilibrat", basePrice: 350, baseLabor: 50 },
+            { id: 17, category: "💻 Diagnoză", name: "Diagnoză Computerizată", basePrice: 0, baseLabor: 150 }
+        ];
+
+        let currentMultiplier = 1.0;
+        let cart = [];
+
+        const domElements = {
+            make: document.getElementById('select-make'),
+            model: document.getElementById('select-model'),
+            year: document.getElementById('select-year'),
+            engine: document.getElementById('select-engine'),
+            partsSection: document.getElementById('parts-section'),
+            partsList: document.getElementById('parts-list'),
+            carBadge: document.getElementById('car-badge'),
+            devizName: document.getElementById('deviz-car-name'),
+            customAddBox: document.getElementById('custom-add-box'),
+            cartContainer: document.getElementById('cart-items')
+        };
+
+        function initApp() {
+            Object.keys(carDatabase).forEach(make => {
+                const option = new Option(make, make);
+                domElements.make.add(option);
+            });
+            loadState();
+        }
+
+        function saveState() {
+            localStorage.setItem('autoEstimatorCart', JSON.stringify(cart));
+            localStorage.setItem('autoEstimatorCar', domElements.devizName.innerText);
+        }
+
+        function loadState() {
+            const savedCart = localStorage.getItem('autoEstimatorCart');
+            const savedCar = localStorage.getItem('autoEstimatorCar');
+
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+                if (savedCar) {
+                    domElements.devizName.innerText = savedCar;
+                    domElements.customAddBox.style.display = 'flex';
+                }
+                renderCart();
+            }
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerText = message;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function resetSelects(...selects) {
+            selects.forEach(select => {
+                select.innerHTML = `<option value="">-- Alege ${select.previousElementSibling.innerText} --</option>`;
+                select.disabled = true;
+            });
+        }
+
+        function handleMakeChange() {
+            const make = domElements.make.value;
+            resetSelects(domElements.model, domElements.year, domElements.engine);
+            domElements.partsSection.style.display = 'none';
+
+            if (make) {
+                currentMultiplier = carDatabase[make].multiplier;
+                Object.keys(carDatabase[make].models).forEach(model => {
+                    domElements.model.add(new Option(model, model));
+                });
+                domElements.model.disabled = false;
+            }
+            clearCart(false);
+        }
+
+        function handleModelChange() {
+            const make = domElements.make.value;
+            const model = domElements.model.value;
+            resetSelects(domElements.year, domElements.engine);
+            domElements.partsSection.style.display = 'none';
+
+            if (model) {
+                carDatabase[make].models[model].years.forEach(year => {
+                    domElements.year.add(new Option(year, year));
+                });
+                domElements.year.disabled = false;
+            }
+            clearCart(false);
+        }
+
+        function handleYearChange() {
+            const make = domElements.make.value;
+            const model = domElements.model.value;
+            const year = domElements.year.value;
+            resetSelects(domElements.engine);
+            domElements.partsSection.style.display = 'none';
+
+            if (year) {
+                carDatabase[make].models[model].engines.forEach(engine => {
+                    domElements.engine.add(new Option(engine, engine));
+                });
+                domElements.engine.disabled = false;
+            }
+            clearCart(false);
+        }
+
+        function loadPartsCatalog() {
+            if (!domElements.engine.value) return;
+
+            domElements.partsSection.style.display = 'block';
+
+            domElements.partsList.innerHTML = `
+                <div class="loader-container">
+                    <div class="spinner"></div>
+                    <p>Căutăm compatibilitățile în catalog...</p>
+                </div>
+            `;
+
+            setTimeout(() => {
+                domElements.carBadge.innerText = `${domElements.make.value} ${domElements.model.value}`;
+                domElements.devizName.innerText = `Vehicul: ${domElements.make.value} ${domElements.model.value} (${domElements.year.value}) - ${domElements.engine.value}`;
+                domElements.customAddBox.style.display = 'flex';
+                renderPartsList(baseParts);
+                saveState();
+            }, 600);
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('part-search').value.toLowerCase();
+            const filtered = baseParts.filter(part =>
+                part.name.toLowerCase().includes(query) || part.category.toLowerCase().includes(query)
+            );
+            renderPartsList(filtered);
+        }
+
+        function renderPartsList(parts) {
+            domElements.partsList.innerHTML = '';
+
+            if (parts.length === 0) {
+                domElements.partsList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">Nu am găsit rezultate.</p>';
+                return;
+            }
+
+            parts.forEach(part => {
+                const premiumPrice = Math.round(part.basePrice * currentMultiplier);
+                const labor = Math.round(part.baseLabor * currentMultiplier);
+
+                const div = document.createElement('div');
+                div.className = 'part-item';
+                div.innerHTML = `
+                    <div class="part-info">
+                        <p>${part.category}</p>
+                        <h4>${part.name}</h4>
+                    </div>
+                    <div class="part-actions">
+                        <select id="quality-${part.id}" class="quality-select" onchange="updatePriceDisplay(${part.id}, ${premiumPrice})">
+                            <option value="premium">Piesă Premium</option>
+                            <option value="budget">Piesă Buget (-35%)</option>
+                        </select>
+                        <div class="part-price">
+                            <span class="price" id="price-display-${part.id}">${premiumPrice} RON</span>
+                            <span class="labor">Manoperă: ${labor > 0 ? labor + ' RON' : 'Inclusă'}</span>
+                        </div>
+                        <button class="btn-add" onclick="handleAddToCart('${part.id}', '${part.name}', ${premiumPrice}, ${labor})">+ Adaugă</button>
+                    </div>
+                `;
+                domElements.partsList.appendChild(div);
+            });
+        }
+
+        function updatePriceDisplay(id, premiumPrice) {
+            const quality = document.getElementById(`quality-${id}`).value;
+            const display = document.getElementById(`price-display-${id}`);
+            display.innerText = quality === 'budget'
+                ? Math.round(premiumPrice * 0.65) + " RON"
+                : premiumPrice + " RON";
+        }
+
+        function handleAddToCart(id, baseName, premiumPrice, labor) {
+            const quality = document.getElementById(`quality-${id}`).value;
+            const finalPrice = quality === 'budget' ? Math.round(premiumPrice * 0.65) : premiumPrice;
+            const finalName = quality === 'budget' ? `${baseName} (Buget)` : `${baseName} (Premium)`;
+
+            addToCart(id + quality, finalName, finalPrice, labor);
+        }
+
+        function addToCart(id, name, price, labor) {
+            if (cart.some(item => item.id === id)) {
+                showToast("Acest reper există deja pe deviz!", "warning");
+                return;
+            }
+            cart.push({ id, name, price, labor });
+            renderCart();
+            showToast("Reper adăugat cu succes.");
+        }
+
+        function addCustomItem() {
+            const nameInput = document.getElementById('custom-name');
+            const priceInput = document.getElementById('custom-price');
+            const name = nameInput.value.trim();
+            const price = parseFloat(priceInput.value);
+
+            if (!name || isNaN(price) || price < 0) {
+                showToast("Date invalide pentru serviciul manual.", "danger");
+                return;
+            }
+
+            cart.push({ id: `custom_${Date.now()}`, name: `[Manual] ${name}`, price: 0, labor: price });
+
+            nameInput.value = '';
+            priceInput.value = '';
+
+            renderCart();
+            showToast("Serviciu manual adăugat.");
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(item => item.id !== id);
+            renderCart();
+        }
+
+        function clearCart(notify = false) {
+            cart = [];
+            domElements.devizName.innerText = "Nicio mașină selectată";
+            domElements.customAddBox.style.display = 'none';
+            if (document.getElementById('part-search')) document.getElementById('part-search').value = "";
+            renderCart();
+            if (notify) showToast("Devizul a fost șters.", "warning");
+        }
+
+        function renderCart() {
+            const btnPrint = document.getElementById('btn-print');
+
+            if (cart.length === 0) {
+                domElements.cartContainer.innerHTML = '<div class="empty-cart">Alege mașina și adaugă piese pentru a genera devizul.</div>';
+                document.getElementById('subtotal-parts').innerText = '0.00 RON';
+                document.getElementById('subtotal-labor').innerText = '0.00 RON';
+                document.getElementById('tva-value').innerText = '0.00 RON';
+                document.getElementById('grand-total').innerText = '0.00 RON';
+                btnPrint.disabled = true;
+                saveState();
+                return;
+            }
+
+            btnPrint.disabled = false;
+            domElements.cartContainer.innerHTML = '';
+
+            let totalPieseTVAInclus = 0;
+            let totalManoperaTVAInclus = 0;
+
+            cart.forEach(item => {
+                totalPieseTVAInclus += item.price;
+                totalManoperaTVAInclus += item.labor;
+
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div class="cart-item-name">
+                        <strong>${item.name}</strong><br>
+                        <span style="color: var(--text-muted); font-size: 12px;">Piesă: ${item.price} RON | Manoperă: ${item.labor} RON</span>
+                    </div>
+                    <button class="cart-item-remove" onclick="removeFromCart('${item.id}')">Șterge</button>
+                `;
+                domElements.cartContainer.appendChild(div);
+            });
+
+            const totalBrut = totalPieseTVAInclus + totalManoperaTVAInclus;
+            const netPiese = totalPieseTVAInclus / 1.19;
+            const netManopera = totalManoperaTVAInclus / 1.19;
+            const tva = totalBrut - (netPiese + netManopera);
+
+            document.getElementById('subtotal-parts').innerText = netPiese.toFixed(2) + ' RON';
+            document.getElementById('subtotal-labor').innerText = netManopera.toFixed(2) + ' RON';
+            document.getElementById('tva-value').innerText = tva.toFixed(2) + ' RON';
+            document.getElementById('grand-total').innerText = totalBrut.toFixed(2) + ' RON';
+
+            saveState();
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+
+</html>
