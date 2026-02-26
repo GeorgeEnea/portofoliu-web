@@ -7,7 +7,6 @@
     <title>NovaBudget Pro - Cloud Edition</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -39,7 +38,7 @@
             overflow-x: hidden;
         }
 
-        /* --- AUTH OVERLAY (Ecranul de Logare) --- */
+        /* --- AUTH OVERLAY --- */
         #auth-overlay {
             position: fixed;
             top: 0;
@@ -137,7 +136,7 @@
             min-height: 20px;
         }
 
-        /* --- APLICAȚIA PRINCIPALĂ (Ascunsă inițial) --- */
+        /* --- APLICAȚIA PRINCIPALĂ --- */
         #app-container {
             display: none;
             padding: 20px;
@@ -156,7 +155,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .header h1 {
@@ -165,6 +166,7 @@
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            margin: 0;
         }
 
         .user-profile {
@@ -190,6 +192,24 @@
 
         .btn-logout:hover {
             background: rgba(244, 63, 94, 0.1);
+        }
+
+        .filter-bar {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .filter-select {
+            background: var(--bg-card);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            outline: none;
         }
 
         .card {
@@ -265,6 +285,28 @@
             outline: none;
         }
 
+        .category-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-add-cat {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 0 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .btn-add-cat:hover {
+            background: var(--accent);
+            color: white;
+        }
+
         .radio-group {
             display: flex;
             gap: 10px;
@@ -285,13 +327,13 @@
         }
 
         .radio-btn.active-inc {
-            background: var(--income-bg);
+            background: rgba(16, 185, 129, 0.1);
             border-color: var(--income);
             color: var(--income);
         }
 
         .radio-btn.active-exp {
-            background: var(--expense-bg);
+            background: rgba(244, 63, 94, 0.1);
             border-color: var(--expense);
             color: var(--expense);
         }
@@ -442,7 +484,6 @@
             text-align: right;
         }
 
-        /* Loader global */
         .spinner {
             width: 40px;
             height: 40px;
@@ -513,18 +554,23 @@
                 </div>
             </div>
 
+            <div class="filter-bar">
+                <select id="month-filter" class="filter-select" onchange="renderDashboard()">
+                </select>
+            </div>
+
             <div class="summary-wrapper">
                 <div class="card">
-                    <div class="card-header">Sold Curent Disponibil</div>
+                    <div class="card-header">Sold Disponibil (Luna selectată)</div>
                     <div class="val-big" id="total-balance">0.00 Lei</div>
                     <p style="color: var(--text-muted); font-size: 13px; margin-top: 5px;">Sincronizat în Cloud ☁️</p>
                 </div>
                 <div class="card">
-                    <div class="card-header">Venituri Totale</div>
+                    <div class="card-header">Venituri (Luna selectată)</div>
                     <div class="val-big val-income" id="total-income">+0.00 Lei</div>
                 </div>
                 <div class="card">
-                    <div class="card-header">Cheltuieli Totale</div>
+                    <div class="card-header">Cheltuieli (Luna selectată)</div>
                     <div class="val-big val-expense" id="total-expense">-0.00 Lei</div>
                 </div>
             </div>
@@ -540,8 +586,16 @@
                             class="form-control" step="0.01" required></div>
                     <div class="form-group"><label>Descriere scurtă</label><input type="text" id="tx-desc"
                             class="form-control" required></div>
-                    <div class="form-group"><label>Categorie</label><select id="tx-category" class="form-control"
-                            required></select></div>
+
+                    <div class="form-group">
+                        <label>Categorie</label>
+                        <div class="category-row">
+                            <select id="tx-category" class="form-control" required></select>
+                            <button type="button" class="btn-add-cat" onclick="addCustomCategory()"
+                                title="Adaugă categorie nouă">+ Nouă</button>
+                        </div>
+                    </div>
+
                     <div class="form-group"><label>Data</label><input type="date" id="tx-date" class="form-control"
                             required></div>
                     <button type="submit" class="btn-submit" id="btn-save-tx">+ Salvează Tranzacția</button>
@@ -551,12 +605,12 @@
             <div class="card col-span-1">
                 <div class="card-header">Analiză Cheltuieli</div>
                 <div class="chart-container"><canvas id="expenseChart"></canvas></div>
-                <p id="empty-chart-msg" style="text-align: center; color: var(--text-muted); display: none;">Nu ai
-                    adăugat cheltuieli.</p>
+                <p id="empty-chart-msg" style="text-align: center; color: var(--text-muted); display: none;">Nu există
+                    date pentru luna selectată.</p>
             </div>
 
             <div class="card col-span-1">
-                <div class="card-header"><span>Limite de Buget</span><button id="btn-edit-budget"
+                <div class="card-header"><span>Limite Buget (Lună curentă)</span><button id="btn-edit-budget"
                         class="btn-edit-budget" onclick="toggleBudgetEdit()">⚙️ Editează</button></div>
                 <div id="budgets-container">
                     <div class="spinner"></div>
@@ -574,8 +628,7 @@
 
     <script>
         // ==========================================
-        // 1. CONFIGURARE FIREBASE
-        // PUNE AICI DATELE TALE GENERATE ÎN CONSOLA FIREBASE
+        // 1. CONFIGURARE FIREBASE - LIPEȘTE CHEILE TALE AICI
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCWkksla6aWzCuk_91Xw2TbyecBkoy0jTc",
@@ -587,49 +640,50 @@
         };
         // ==========================================
 
-        // Inițializare Firebase
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        // Variabile de aplicație
         let currentUser = null;
         let transactions = [];
         let monthlyBudgets = {};
+        let customCategories = { expense: [], income: [] }; // NOU: Stocăm categoriile create de utilizator
         let currentType = 'expense';
         let chartInstance = null;
         let isEditingBudgets = false;
 
-        const categories = {
+        const defaultCategories = {
             expense: [
                 { id: 'food', name: 'Alimente & Supermarket', icon: '🛒', color: '#3b82f6' },
                 { id: 'home', name: 'Chirie & Întreținere', icon: '🏠', color: '#8b5cf6' },
                 { id: 'auto', name: 'Auto & Transport', icon: '🚗', color: '#f59e0b' },
                 { id: 'fun', name: 'Divertisment & Ieșiri', icon: '🍹', color: '#ec4899' },
-                { id: 'health', name: 'Sănătate & Farmacie', icon: '💊', color: '#10b981' },
-                { id: 'shopping', name: 'Haine & Cumpărături', icon: '🛍️', color: '#06b6d4' }
+                { id: 'health', name: 'Sănătate & Farmacie', icon: '💊', color: '#10b981' }
             ],
             income: [
                 { id: 'salary', name: 'Salariu Principal', icon: '💼', color: '#10b981' },
-                { id: 'bonus', name: 'Bonus / Prime', icon: '🎁', color: '#3b82f6' },
-                { id: 'freelance', name: 'Freelancing / Proiecte', icon: '🚀', color: '#f59e0b' }
+                { id: 'bonus', name: 'Bonus / Prime', icon: '🎁', color: '#3b82f6' }
             ]
         };
 
-        // --- SISTEMUL DE AUTENTIFICARE (LOGARE/CREARE CONT) ---
+        // Combina categoriile implicite cu cele personalizate
+        function getCategories() {
+            return {
+                expense: [...defaultCategories.expense, ...customCategories.expense],
+                income: [...defaultCategories.income, ...customCategories.income]
+            };
+        }
+
+        // --- AUTENTIFICARE ---
         auth.onAuthStateChanged(user => {
             if (user) {
-                // Utilizator logat cu succes!
                 currentUser = user;
                 document.getElementById('auth-overlay').style.display = 'none';
                 document.getElementById('app-container').style.display = 'block';
                 document.getElementById('user-display').innerText = user.email;
-
-                // După logare, tragem datele lui din baza de date
                 initAppUI();
                 loadDataFromCloud();
             } else {
-                // Utilizator nelogat
                 currentUser = null;
                 document.getElementById('auth-overlay').style.display = 'flex';
                 document.getElementById('app-container').style.display = 'none';
@@ -639,73 +693,53 @@
         function registerUser() {
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-password').value;
-            const errDiv = document.getElementById('auth-error');
-
-            auth.createUserWithEmailAndPassword(email, pass)
-                .then(() => errDiv.innerText = "")
-                .catch(error => errDiv.innerText = "Eroare: " + error.message);
+            auth.createUserWithEmailAndPassword(email, pass).catch(err => document.getElementById('auth-error').innerText = err.message);
         }
-
         function loginUser() {
             const email = document.getElementById('auth-email').value;
             const pass = document.getElementById('auth-password').value;
-            const errDiv = document.getElementById('auth-error');
-
-            auth.signInWithEmailAndPassword(email, pass)
-                .then(() => errDiv.innerText = "")
-                .catch(error => errDiv.innerText = "Email sau parolă incorectă.");
+            auth.signInWithEmailAndPassword(email, pass).catch(err => document.getElementById('auth-error').innerText = "Email sau parolă incorectă.");
         }
+        function logoutUser() { auth.signOut(); }
 
-        function logoutUser() {
-            auth.signOut();
-        }
-
-        // --- INTERACȚIUNEA CU BAZA DE DATE (CLOUD FIRESTORE) ---
-
-        // Citim datele din Cloud
+        // --- CLOUD FIRESTORE ---
         async function loadDataFromCloud() {
             if (!currentUser) return;
-
-            // Căutăm documentul specific acestui utilizator
             const userDoc = await db.collection('users').doc(currentUser.uid).get();
 
             if (userDoc.exists) {
                 const data = userDoc.data();
                 transactions = data.transactions || [];
                 monthlyBudgets = data.monthlyBudgets || {};
+                customCategories = data.customCategories || { expense: [], income: [] };
             } else {
-                // Dacă e cont nou, inițializăm cu liste goale în Cloud
-                transactions = [];
-                monthlyBudgets = {};
-                categories.expense.forEach(cat => monthlyBudgets[cat.id] = 0);
-                await db.collection('users').doc(currentUser.uid).set({ transactions, monthlyBudgets });
+                transactions = []; monthlyBudgets = {}; customCategories = { expense: [], income: [] };
+                defaultCategories.expense.forEach(cat => monthlyBudgets[cat.id] = 0);
+                await db.collection('users').doc(currentUser.uid).set({ transactions, monthlyBudgets, customCategories });
             }
 
+            updateCategorySelect();
+            populateMonthFilter();
             renderDashboard();
         }
 
-        // Salvăm datele în Cloud (Update)
         async function saveDataToCloud() {
             if (!currentUser) return;
-
             const btn = document.getElementById('btn-save-tx');
-            const originalText = btn.innerText;
-            btn.innerText = "Se salvează în Cloud...";
-            btn.disabled = true;
+            const originalText = btn.innerText; btn.innerText = "Se salvează..."; btn.disabled = true;
 
             await db.collection('users').doc(currentUser.uid).set({
                 transactions: transactions,
-                monthlyBudgets: monthlyBudgets
+                monthlyBudgets: monthlyBudgets,
+                customCategories: customCategories
             });
 
-            btn.innerText = originalText;
-            btn.disabled = false;
+            btn.innerText = originalText; btn.disabled = false;
         }
 
-        // --- LOGICA DE UI (Aplicația) ---
+        // --- LOGICĂ UI & CATEGORII CUSTOM ---
         function initAppUI() {
             document.getElementById('tx-date').valueAsDate = new Date();
-            updateCategorySelect();
         }
 
         function setTxType(type) {
@@ -718,13 +752,39 @@
         function updateCategorySelect() {
             const select = document.getElementById('tx-category');
             select.innerHTML = '';
-            categories[currentType].forEach(cat => {
+            const allCats = getCategories()[currentType];
+            allCats.forEach(cat => {
                 const opt = document.createElement('option');
                 opt.value = cat.id; opt.innerText = `${cat.icon} ${cat.name}`;
                 select.appendChild(opt);
             });
         }
 
+        function addCustomCategory() {
+            const name = prompt("Scrie numele noii categorii (ex: Mâncare Cățel, Hobby, Combustibil):");
+            if (!name || name.trim() === '') return;
+
+            const icon = prompt("Pune un Emoji reprezentativ pentru ea (opțional, poți lăsa liber pentru 📌):") || "📌";
+
+            const colors = ['#3b82f6', '#8b5cf6', '#f59e0b', '#ec4899', '#10b981', '#06b6d4'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            const newCat = {
+                id: 'custom_' + Date.now(),
+                name: name.trim(),
+                icon: icon,
+                color: randomColor
+            };
+
+            customCategories[currentType].push(newCat);
+            if (currentType === 'expense') monthlyBudgets[newCat.id] = 0; // Pregătim buget pentru ea
+
+            updateCategorySelect();
+            saveDataToCloud();
+            alert("Categorie adăugată cu succes!");
+        }
+
+        // --- TRANZACȚII & FILTRARE ---
         function handleTransactionSubmit(e) {
             e.preventDefault();
             const amount = parseFloat(document.getElementById('tx-amount').value);
@@ -732,24 +792,98 @@
             const category = document.getElementById('tx-category').value;
             const date = document.getElementById('tx-date').value;
 
-            const newTx = {
-                id: Date.now().toString(), type: currentType, amount, desc, category, date, timestamp: Date.now()
-            };
-
+            const newTx = { id: Date.now().toString(), type: currentType, amount, desc, category, date, timestamp: Date.now() };
             transactions.unshift(newTx);
-            document.getElementById('tx-amount').value = '';
-            document.getElementById('tx-desc').value = '';
+            document.getElementById('tx-amount').value = ''; document.getElementById('tx-desc').value = '';
 
+            populateMonthFilter(); // Refacem filtrele dacă am adăugat o lună nouă
             renderDashboard();
-            saveDataToCloud(); // Salvăm pe server
+            saveDataToCloud();
         }
 
         function deleteTransaction(id) {
             if (confirm("Confirmați ștergerea?")) {
                 transactions = transactions.filter(t => t.id !== id);
+                populateMonthFilter();
                 renderDashboard();
                 saveDataToCloud();
             }
+        }
+
+        function populateMonthFilter() {
+            const select = document.getElementById('month-filter');
+            const currentValue = select.value;
+            select.innerHTML = '<option value="all">💳 Toate lunile / Istoric Complet</option>';
+
+            const monthsSet = new Set();
+            transactions.forEach(t => {
+                const d = new Date(t.date);
+                monthsSet.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+            });
+
+            // Adăugăm mereu luna curentă, chiar dacă e goală
+            const now = new Date();
+            const currentMY = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            monthsSet.add(currentMY);
+
+            const monthNames = ["Ianuarie", "Februarie", "Martie", "Aprilie", "Mai", "Iunie", "Iulie", "August", "Septembrie", "Octombrie", "Noiembrie", "Decembrie"];
+
+            Array.from(monthsSet).sort().reverse().forEach(my => {
+                const [y, m] = my.split('-');
+                const opt = document.createElement('option');
+                opt.value = my; opt.innerText = `📅 ${monthNames[parseInt(m) - 1]} ${y}`;
+                if ((currentValue === '' && my === currentMY) || my === currentValue) opt.selected = true; // Păstrăm selecția sau punem luna curentă default
+                select.appendChild(opt);
+            });
+
+            if (select.value === '') select.value = currentMY;
+        }
+
+        // --- FUNCȚII RENDER (Afectate de filtru) ---
+        const formatMoney = (amount) => new Intl.NumberFormat('ro-RO', { style: 'currency', currency: 'RON' }).format(amount);
+        function getCategoryData(type, id) { return getCategories()[type].find(c => c.id === id) || { name: 'Necunoscut', icon: '❓', color: '#71717a' }; }
+
+        function renderDashboard() {
+            const filterVal = document.getElementById('month-filter').value;
+            let filteredTx = transactions;
+
+            // Aplicăm filtrul de lună
+            if (filterVal !== 'all') {
+                filteredTx = transactions.filter(t => t.date.startsWith(filterVal));
+            }
+
+            // Calculăm totalurile doar pentru tranzacțiile filtrate
+            let inc = 0, exp = 0;
+            filteredTx.forEach(t => { t.type === 'income' ? inc += t.amount : exp += t.amount; });
+            document.getElementById('total-balance').innerText = formatMoney(inc - exp);
+            document.getElementById('total-income').innerText = '+' + formatMoney(inc);
+            document.getElementById('total-expense').innerText = '-' + formatMoney(exp);
+
+            renderHistory(filteredTx);
+            renderBudgets(filteredTx);
+            updateChartData(filteredTx);
+        }
+
+        function renderHistory(txArray) {
+            const list = document.getElementById('history-list');
+            list.innerHTML = '';
+            if (txArray.length === 0) { list.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">Nu există tranzacții în această perioadă.</p>'; return; }
+            const sorted = [...txArray].sort((a, b) => b.timestamp - a.timestamp);
+            sorted.forEach(t => {
+                const cat = getCategoryData(t.type, t.category);
+                const isInc = t.type === 'income';
+                list.innerHTML += `
+                    <div class="history-item">
+                        <div class="h-info">
+                            <div class="h-icon" style="background: ${isInc ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)'}; color: ${isInc ? 'var(--income)' : 'var(--expense)'}">${cat.icon}</div>
+                            <div class="h-details"><h4>${t.desc}</h4><p>${cat.name} • ${t.date}</p></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span class="h-amount" style="color: ${isInc ? 'var(--income)' : 'var(--expense)'}">${isInc ? '+' : '-'}${formatMoney(t.amount)}</span>
+                            <button class="btn-delete" onclick="deleteTransaction('${t.id}')">🗑️</button>
+                        </div>
+                    </div>`;
+            });
         }
 
         function toggleBudgetEdit() {
@@ -758,11 +892,11 @@
 
             if (!isEditingBudgets) {
                 isEditingBudgets = true;
-                btn.innerText = "💾 Salvează în Cloud";
+                btn.innerText = "💾 Salvează";
                 btn.style.background = "var(--accent)"; btn.style.borderColor = "var(--accent)"; btn.style.color = "white";
 
                 container.innerHTML = '';
-                categories.expense.forEach(cat => {
+                getCategories().expense.forEach(cat => {
                     const currentLimit = monthlyBudgets[cat.id] || 0;
                     container.innerHTML += `
                         <div class="budget-edit-row">
@@ -772,7 +906,7 @@
                     `;
                 });
             } else {
-                categories.expense.forEach(cat => {
+                getCategories().expense.forEach(cat => {
                     const input = document.getElementById(`budget-input-${cat.id}`);
                     if (input) monthlyBudgets[cat.id] = parseFloat(input.value) || 0;
                 });
@@ -781,56 +915,19 @@
                 btn.innerText = "⚙️ Editează";
                 btn.style.background = "var(--bg-dark)"; btn.style.borderColor = "var(--border)"; btn.style.color = "var(--text-main)";
 
-                renderBudgets();
+                renderDashboard();
                 saveDataToCloud();
             }
         }
 
-        // Funcții de Render (Balanță, Istoric, Grafic, Bugete) identice cu cele din varianta anterioară...
-        const formatMoney = (amount) => new Intl.NumberFormat('ro-RO', { style: 'currency', currency: 'RON' }).format(amount);
-        function getCategoryData(type, id) { return categories[type].find(c => c.id === id) || { name: 'Necunoscut', icon: '❓', color: '#71717a' }; }
-
-        function renderDashboard() {
-            let inc = 0, exp = 0;
-            transactions.forEach(t => { t.type === 'income' ? inc += t.amount : exp += t.amount; });
-            document.getElementById('total-balance').innerText = formatMoney(inc - exp);
-            document.getElementById('total-income').innerText = '+' + formatMoney(inc);
-            document.getElementById('total-expense').innerText = '-' + formatMoney(exp);
-
-            renderHistory();
-            renderBudgets();
-            updateChartData();
-        }
-
-        function renderHistory() {
-            const list = document.getElementById('history-list');
-            list.innerHTML = '';
-            if (transactions.length === 0) { list.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding: 20px;">Nu există tranzacții.</p>'; return; }
-            const sorted = [...transactions].sort((a, b) => b.timestamp - a.timestamp);
-            sorted.forEach(t => {
-                const cat = getCategoryData(t.type, t.category);
-                const isInc = t.type === 'income';
-                list.innerHTML += `
-                    <div class="history-item">
-                        <div class="h-info">
-                            <div class="h-icon" style="background: ${isInc ? 'var(--income-bg)' : 'var(--expense-bg)'}; color: ${isInc ? 'var(--income)' : 'var(--expense)'}">${cat.icon}</div>
-                            <div class="h-details"><h4>${t.desc}</h4><p>${cat.name} • ${t.date}</p></div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 15px;">
-                            <span class="h-amount ${isInc ? 'val-income' : 'val-expense'}">${isInc ? '+' : '-'}${formatMoney(t.amount)}</span>
-                            <button class="btn-delete" onclick="deleteTransaction('${t.id}')">🗑️</button>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        function renderBudgets() {
+        function renderBudgets(txArray) {
             if (isEditingBudgets) return;
             const container = document.getElementById('budgets-container');
             container.innerHTML = '';
+
             let spentByCategory = {};
-            categories.expense.forEach(c => spentByCategory[c.id] = 0);
-            transactions.forEach(t => { if (t.type === 'expense' && spentByCategory[t.category] !== undefined) spentByCategory[t.category] += t.amount; });
+            getCategories().expense.forEach(c => spentByCategory[c.id] = 0);
+            txArray.forEach(t => { if (t.type === 'expense' && spentByCategory[t.category] !== undefined) spentByCategory[t.category] += t.amount; });
 
             let hasBudgets = false;
             Object.keys(monthlyBudgets).forEach(catId => {
@@ -853,10 +950,10 @@
             if (!hasBudgets) container.innerHTML = '<p style="text-align:center; padding: 20px; color: var(--text-muted);">Nu ai limite de buget active.</p>';
         }
 
-        function updateChartData() {
+        function updateChartData(txArray) {
             const ctx = document.getElementById('expenseChart').getContext('2d');
             let expMap = {}; let hasData = false;
-            transactions.forEach(t => { if (t.type === 'expense') { hasData = true; expMap[t.category] = (expMap[t.category] || 0) + t.amount; } });
+            txArray.forEach(t => { if (t.type === 'expense') { hasData = true; expMap[t.category] = (expMap[t.category] || 0) + t.amount; } });
 
             document.getElementById('expenseChart').style.display = hasData ? 'block' : 'none';
             document.getElementById('empty-chart-msg').style.display = hasData ? 'none' : 'block';
