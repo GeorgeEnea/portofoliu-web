@@ -3,8 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaBudget Pro - Mobile UX</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NovaBudget Pro - Color Edit</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -23,6 +23,7 @@
             --expense: #ff453a;
             --warning: #ff9f0a;
             --border: #2c2c2e;
+            --modal-bg: #1c1c1e;
         }
 
         * {
@@ -37,20 +38,17 @@
             background-color: var(--bg-dark);
             color: var(--text-main);
             min-height: 100vh;
-            overflow-x: hidden;
-            padding-bottom: 90px;
+            padding-bottom: 100px;
         }
 
-        /* padding jos pentru butonul plutitor */
-
-        /* --- OVERLAY AUTENTIFICARE --- */
+        /* --- AUTH --- */
         #auth-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(0, 0, 0, 0.98);
             backdrop-filter: blur(10px);
             display: flex;
             justify-content: center;
@@ -61,33 +59,28 @@
         .auth-card {
             background: var(--bg-card);
             padding: 30px;
-            border-radius: 24px;
+            border-radius: 28px;
             border: 1px solid var(--border);
             width: 90%;
-            max-width: 400px;
+            max-width: 380px;
             text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
         }
 
         .auth-card h2 {
-            font-size: 28px;
+            font-size: 32px;
             margin-bottom: 10px;
-            color: var(--text-main);
             font-weight: 800;
-        }
-
-        .auth-card p {
-            color: var(--text-muted);
-            margin-bottom: 25px;
-            font-size: 14px;
+            letter-spacing: -1px;
         }
 
         .auth-input {
             width: 100%;
             background: #1c1c1e;
-            border: 1px solid transparent;
+            border: 2px solid transparent;
             color: var(--text-main);
-            padding: 15px;
-            border-radius: 12px;
+            padding: 16px;
+            border-radius: 14px;
             margin-bottom: 15px;
             font-size: 16px;
             outline: none;
@@ -96,7 +89,6 @@
 
         .auth-input:focus {
             border-color: var(--accent);
-            background: #2c2c2e;
         }
 
         .btn-auth {
@@ -104,12 +96,11 @@
             background: var(--accent);
             color: white;
             border: none;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 16px;
+            border-radius: 14px;
             font-weight: bold;
             font-size: 16px;
             cursor: pointer;
-            margin-bottom: 10px;
         }
 
         .btn-auth-sec {
@@ -118,10 +109,9 @@
             color: var(--accent);
             border: none;
             padding: 15px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
+            margin-top: 5px;
         }
 
         #auth-error {
@@ -131,11 +121,11 @@
             min-height: 20px;
         }
 
-        /* --- HEADER & USER --- */
+        /* --- APP MAIN --- */
         #app-container {
             display: none;
             padding: 20px;
-            max-width: 800px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
@@ -143,111 +133,78 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .header-title h1 {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 4px;
+            margin-bottom: 25px;
         }
 
         .user-email {
             color: var(--text-muted);
             font-size: 12px;
+            margin-top: 2px;
         }
 
         .btn-logout {
-            background: rgba(255, 69, 58, 0.1);
+            background: rgba(255, 69, 58, 0.12);
             color: var(--expense);
             border: none;
-            padding: 6px 12px;
+            padding: 7px 14px;
             border-radius: 12px;
             font-size: 12px;
             font-weight: bold;
-            cursor: pointer;
         }
 
-        /* --- FILTER --- */
         .filter-select {
             width: 100%;
             background: var(--bg-card);
             color: var(--text-main);
             border: 1px solid var(--border);
-            padding: 12px 15px;
-            border-radius: 12px;
+            padding: 14px;
+            border-radius: 14px;
             font-weight: 600;
-            font-size: 15px;
-            outline: none;
-            margin-bottom: 20px;
+            font-size: 16px;
             appearance: none;
+            margin-bottom: 20px;
+            outline: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%238e8e93%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 15px top 50%;
+            background-size: 12px auto;
         }
 
         /* --- CARDS --- */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
         .card {
             background: var(--bg-card);
-            border-radius: 20px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card.full-width {
-            grid-column: 1 / -1;
+            border-radius: 24px;
+            padding: 22px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
         }
 
         .card-title {
             font-size: 13px;
             color: var(--text-muted);
             text-transform: uppercase;
-            font-weight: 600;
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: 0.7px;
         }
 
         .val-big {
-            font-size: 32px;
+            font-size: 36px;
             font-weight: 800;
-            letter-spacing: -1px;
+            letter-spacing: -1.5px;
         }
 
-        .val-med {
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        .color-inc {
-            color: var(--income);
-        }
-
-        .color-exp {
-            color: var(--expense);
-        }
-
-        /* --- ISTORIC TRANZACȚII (REVOLUT STYLE) --- */
-        .history-list {
+        /* --- HISTORY --- */
+        .h-list {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 18px;
         }
 
         .h-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        .h-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
         }
 
         .h-icon {
@@ -258,161 +215,146 @@
             justify-content: center;
             align-items: center;
             font-size: 22px;
-        }
-
-        .h-text h4 {
-            font-size: 16px;
-            margin: 0 0 4px 0;
-            font-weight: 600;
-        }
-
-        .h-text p {
-            font-size: 13px;
-            color: var(--text-muted);
-            margin: 0;
-        }
-
-        .h-right {
-            text-align: right;
+            background: var(--bg-hover);
         }
 
         .h-amount {
             font-size: 16px;
             font-weight: 700;
-            display: block;
-            margin-bottom: 4px;
+            text-align: right;
         }
 
-        .btn-delete {
-            background: none;
-            border: none;
+        .h-date {
+            font-size: 12px;
             color: var(--text-muted);
-            font-size: 16px;
-            cursor: pointer;
-            padding: 5px;
+            margin-top: 2px;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 30px 10px;
-            color: var(--text-muted);
-            font-size: 14px;
-        }
-
-        /* --- GRAFIC ȘI LEGENDĂ --- */
-        .chart-container {
+        /* --- CHART & LEGENDA INTERACTIVĂ --- */
+        .chart-box {
             position: relative;
-            height: 220px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
+            height: 200px;
+            margin-bottom: 25px;
         }
 
-        .custom-legend {
+        .legend-list {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-top: 10px;
         }
 
         .legend-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 14px;
             background: var(--bg-hover);
-            padding: 10px 15px;
-            border-radius: 12px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid transparent;
         }
 
-        .legend-left {
+        .legend-item:active {
+            background: #2c2c2e;
+            transform: scale(0.98);
+        }
+
+        .legend-item.editing {
+            border-color: var(--accent);
+            background: rgba(10, 132, 255, 0.1);
+        }
+
+        .l-left {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 600;
         }
 
-        .legend-color {
-            width: 12px;
-            height: 12px;
+        .l-color {
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
         }
 
-        .legend-right {
+        .l-right {
+            text-align: right;
             font-weight: 700;
+            font-size: 15px;
         }
 
-        .legend-percent {
+        .l-p {
             color: var(--text-muted);
-            font-weight: normal;
+            font-weight: 400;
             font-size: 12px;
-            margin-left: 5px;
+            margin-left: 4px;
         }
 
-        /* --- BUTON PLUTITOR (FAB) --- */
+        .edit-icon {
+            color: var(--text-muted);
+            font-size: 10px;
+            margin-left: 6px;
+        }
+
+        /* --- FAB & MODALS (BOTTOM SHEETS) --- */
         .fab {
             position: fixed;
             bottom: 30px;
             right: 30px;
-            width: 60px;
-            height: 60px;
+            width: 64px;
+            height: 64px;
             background: var(--accent);
             color: white;
             border: none;
-            border-radius: 30px;
-            font-size: 32px;
+            border-radius: 32px;
+            font-size: 36px;
             font-weight: 300;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 10px 25px rgba(10, 132, 255, 0.5);
-            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(10, 132, 255, 0.4);
             z-index: 100;
-            transition: transform 0.2s;
         }
 
-        .fab:active {
-            transform: scale(0.9);
-        }
-
-        /* --- BOTTOM SHEET MODAL (MENIUL GLISANT DE JOS) --- */
-        .modal-overlay {
+        .ms-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 900;
             opacity: 0;
             visibility: hidden;
             transition: 0.3s;
+            backdrop-filter: blur(2px);
         }
 
-        .modal-overlay.active {
+        .ms-overlay.active {
             opacity: 1;
             visibility: visible;
         }
 
-        .modal-content {
+        .ms-content {
             position: fixed;
             bottom: -100%;
             left: 0;
             width: 100%;
-            background: #1c1c1e;
-            border-radius: 24px 24px 0 0;
-            padding: 25px 20px 40px;
+            background: var(--modal-bg);
+            border-radius: 28px 28px 0 0;
+            padding: 20px 20px 40px;
             z-index: 901;
-            transition: bottom 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+            transition: bottom 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            border-top: 1px solid var(--border);
         }
 
-        .modal-content.active {
+        .ms-content.active {
             bottom: 0;
         }
 
-        .modal-drag {
+        .ms-drag {
             width: 40px;
             height: 5px;
             background: #3a3a3c;
@@ -420,73 +362,134 @@
             margin: 0 auto 20px;
         }
 
-        /* FORMULAR IN MODAL */
+        /* --- FORM --- */
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
 
-        .form-group label {
+        .form-label {
             display: block;
             font-size: 13px;
             color: var(--text-muted);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-weight: 600;
         }
 
-        .form-control {
+        .form-ctrl {
             width: 100%;
             background: var(--bg-dark);
             border: 1px solid transparent;
             color: var(--text-main);
-            padding: 14px;
-            border-radius: 12px;
+            padding: 16px;
+            border-radius: 14px;
             font-size: 16px;
             outline: none;
         }
 
-        .radio-group {
+        .form-ctrl:focus {
+            border-color: #3a3a3c;
+        }
+
+        .r-group {
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
         }
 
-        .radio-btn {
+        .r-btn {
             flex: 1;
             text-align: center;
             background: var(--bg-dark);
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
             color: var(--text-muted);
-            cursor: pointer;
             border: 2px solid transparent;
-            transition: 0.2s;
         }
 
-        .radio-btn.active-inc {
-            background: rgba(48, 209, 88, 0.1);
-            border-color: var(--income);
-            color: var(--income);
-        }
-
-        .radio-btn.active-exp {
+        .r-btn.act-exp {
             background: rgba(255, 69, 58, 0.1);
             border-color: var(--expense);
             color: var(--expense);
         }
 
-        .btn-submit {
+        .r-btn.act-inc {
+            background: rgba(48, 209, 88, 0.1);
+            border-color: var(--income);
+            color: var(--income);
+        }
+
+        .btn-sub {
             width: 100%;
             background: var(--accent);
             color: white;
             border: none;
-            padding: 16px;
-            border-radius: 14px;
-            font-size: 16px;
+            padding: 18px;
+            border-radius: 16px;
+            font-size: 17px;
             font-weight: 700;
-            cursor: pointer;
             margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(10, 132, 255, 0.3);
+        }
+
+        /* --- COLOR PICKER UI --- */
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .color-swatch {
+            aspect-ratio: 1;
+            border-radius: 14px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: 0.2s;
+            position: relative;
+        }
+
+        .color-swatch.active {
+            border-color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .color-swatch.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Custom Native Picker Button */
+        .custom-picker-btn {
+            grid-column: span 5;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #native-color-picker {
+            opacity: 0;
+            position: absolute;
+            width: 0;
+            height: 0;
         }
 
         .spinner {
@@ -496,7 +499,7 @@
             border-top: 3px solid var(--accent);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 30px auto;
         }
 
         @keyframes spin {
@@ -516,93 +519,120 @@
     <div id="auth-overlay">
         <div class="auth-card">
             <h2>NovaBudget</h2>
-            <p>Aplicația ta financiară inteligentă.</p>
+            <p>Conectează-te în siguranță.</p>
             <div id="auth-error"></div>
             <input type="email" id="auth-email" class="auth-input" placeholder="Email">
             <input type="password" id="auth-password" class="auth-input" placeholder="Parolă">
             <button class="btn-auth" onclick="loginUser()">Intră în cont</button>
-            <button class="btn-auth-sec" onclick="registerUser()">Creează cont nou</button>
+            <button class="btn-auth-sec" onclick="registerUser()">Cont nou</button>
         </div>
     </div>
 
     <div id="app-container">
         <div class="header">
-            <div class="header-title">
-                <h1>Acasă</h1>
-                <div class="user-email" id="user-display">user@email.com</div>
+            <div>
+                <h1 style="font-size: 26px; font-weight: 800;">Finanțe</h1>
+                <div class="user-email" id="user-display"></div>
             </div>
             <button class="btn-logout" onclick="logoutUser()">Ieșire</button>
         </div>
 
         <select id="month-filter" class="filter-select" onchange="renderDashboard()"></select>
 
-        <div class="summary-grid">
-            <div class="card full-width"
-                style="background: linear-gradient(135deg, #1c1c1e 0%, #000 100%); border: 1px solid #3a3a3c;">
-                <div class="card-title">Sold Disponibil</div>
-                <div class="val-big" id="total-balance">0.00 Lei</div>
+        <div class="card"
+            style="background: linear-gradient(145deg, #111113 0%, #000 100%); border: 1px solid #2c2c2e;">
+            <div class="card-title">Sold Actual</div>
+            <div class="val-big" id="total-balance">0 Lei</div>
+            <div style="display: flex; gap: 15px; margin-top: 15px; font-size: 14px;">
+                <span class="act-inc" style="color: var(--income); font-weight: 600;" id="total-income">+0</span>
+                <span class="act-exp" style="color: var(--expense); font-weight: 600;" id="total-expense">-0</span>
             </div>
-            <div class="card">
-                <div class="card-title">Venituri</div>
-                <div class="val-med color-inc" id="total-income">+0.00</div>
-            </div>
-            <div class="card">
-                <div class="card-title">Cheltuieli</div>
-                <div class="val-med color-exp" id="total-expense">-0.00</div>
-            </div>
-        </div>
-
-        <div class="card" style="margin-bottom: 20px;">
-            <div class="card-title" style="display: flex; justify-content: space-between;">
-                <span>Analiză Cheltuieli</span>
-                <span id="chart-total" style="color: var(--text-main); font-weight: bold;">0 Lei</span>
-            </div>
-            <div class="chart-container"><canvas id="expenseChart"></canvas></div>
-            <div class="empty-state" id="empty-chart-msg" style="display: none;">Nu există cheltuieli în această lună.
-            </div>
-            <div id="custom-legend" class="custom-legend"></div>
         </div>
 
         <div class="card">
-            <div class="card-title">Ultimele Tranzacții</div>
-            <div class="history-list" id="history-list">
+            <div class="card-title" style="display: flex; justify-content: space-between;">
+                <span>Cheltuieli pe categorii</span>
+                <span id="chart-total" style="color: var(--text-main); font-weight: 800;">0 Lei</span>
+            </div>
+            <div class="chart-box"><canvas id="expenseChart"></canvas></div>
+            <p id="chart-empty"
+                style="text-align: center; color: var(--text-muted); font-size: 14px; display: none; padding: 20px 0;">
+                Nicio cheltuială salvată.</p>
+
+            <div
+                style="margin-top: -10px; margin-bottom: 10px; text-align: center; font-size: 11px; color: var(--accent);">
+                👉 Apasă pe o categorie jos pentru a-i schimba culoarea</div>
+            <div id="legend-list" class="legend-list"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Istoric recent</div>
+            <div class="h-list" id="history-list">
                 <div class="spinner"></div>
             </div>
         </div>
     </div>
 
-    <button class="fab" onclick="toggleModal(true)">+</button>
+    <button class="fab" onclick="toggleMainModal(true)">+</button>
 
-    <div id="modal-overlay" class="modal-overlay" onclick="toggleModal(false)"></div>
-    <div id="add-modal" class="modal-content">
-        <div class="modal-drag"></div>
-        <h3 style="margin-bottom: 20px; font-size: 20px;">Adaugă Tranzacție</h3>
+    <div id="ms-overlay-main" class="ms-overlay" onclick="toggleMainModal(false)"></div>
+    <div id="modal-main" class="ms-content">
+        <div class="ms-drag"></div>
+        <h3 style="font-size: 20px; margin-bottom: 20px; font-weight: 800;">Tranzacție nouă</h3>
 
-        <div class="radio-group">
-            <div class="radio-btn active-exp" id="btn-type-exp" onclick="setTxType('expense')">Cheltuială</div>
-            <div class="radio-btn" id="btn-type-inc" onclick="setTxType('income')">Venit</div>
+        <div class="r-group">
+            <div class="r-btn act-exp" id="btn-type-exp" onclick="setTxType('expense')">Cheltuială</div>
+            <div class="r-btn" id="btn-type-inc" onclick="setTxType('income')">Venit</div>
         </div>
 
-        <form id="tx-form" onsubmit="handleTransactionSubmit(event)">
-            <div class="form-group"><label>Suma (Lei)</label><input type="number" id="tx-amount" class="form-control"
-                    step="0.01" placeholder="0.00" required></div>
-            <div class="form-group"><label>Descriere scurtă</label><input type="text" id="tx-desc" class="form-control"
-                    placeholder="Ex: Mega Image, Factură..." required></div>
-
+        <form id="tx-form" onsubmit="handleTxSubmit(event)">
+            <div class="form-group"><label class="form-label">Sumă (Lei)</label><input type="number" id="tx-amount"
+                    class="form-ctrl" placeholder="0.00" required step="0.01"></div>
+            <div class="form-group"><label class="form-label">Descriere</label><input type="text" id="tx-desc"
+                    class="form-ctrl" placeholder="Ex: Cumpărături..." required></div>
             <div class="form-group" style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
-                    <label>Categorie</label>
-                    <select id="tx-category" class="form-control" required></select>
-                </div>
-                <button type="button" onclick="addCustomCategory()"
-                    style="margin-top: 25px; padding: 0 15px; border-radius: 12px; border: none; background: #2c2c2e; color: var(--accent); font-weight: bold; cursor: pointer;">+
+                <div style="flex: 1;"><label class="form-label">Categorie</label><select id="tx-category"
+                        class="form-ctrl" required></select></div>
+                <button type="button" onclick="addCustomCat()"
+                    style="margin-top: 28px; padding: 0 15px; border-radius: 12px; border: none; background: #2c2c2e; color: var(--accent); font-weight: bold; font-size: 13px;">+
                     Nouă</button>
             </div>
-
-            <div class="form-group"><label>Data</label><input type="date" id="tx-date" class="form-control" required>
-            </div>
-            <button type="submit" class="btn-submit" id="btn-save-tx">Salvează</button>
+            <div class="form-group"><label class="form-label">Dată</label><input type="date" id="tx-date"
+                    class="form-ctrl" required></div>
+            <button type="submit" class="btn-sub" id="btn-save">Salvează Tranzacția</button>
         </form>
+    </div>
+
+    <div id="ms-overlay-color" class="ms-overlay" onclick="closeColorModal()"></div>
+    <div id="modal-color" class="ms-content">
+        <div class="ms-drag"></div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 id="color-modal-title" style="font-size: 19px; font-weight: 800;">Alege Culoare</h3>
+            <button onclick="closeColorModal()"
+                style="background: none; border: none; color: var(--accent); font-weight: 600; font-size: 14px;">Gata</button>
+        </div>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Selectează o culoare din paletă
+            pentru categoria <span id="color-cat-name" style="color: white; font-weight: 600;"></span>.</p>
+
+        <div class="color-grid" id="color-palette-grid">
+            <div class="color-swatch" style="background: #ff453a;" onclick="selectPaletteColor('#ff453a')"></div>
+            <div class="color-swatch" style="background: #ff9f0a;" onclick="selectPaletteColor('#ff9f0a')"></div>
+            <div class="color-swatch" style="background: #ffd60a;" onclick="selectPaletteColor('#ffd60a')"></div>
+            <div class="color-swatch" style="background: #30d158;" onclick="selectPaletteColor('#30d158')"></div>
+            <div class="color-swatch" style="background: #0a84ff;" onclick="selectPaletteColor('#0a84ff')"></div>
+            <div class="color-swatch" style="background: #5e5ce6;" onclick="selectPaletteColor('#5e5ce6')"></div>
+            <div class="color-swatch" style="background: #bf5af2;" onclick="selectPaletteColor('#bf5af2')"></div>
+            <div class="color-swatch" style="background: #ff375f;" onclick="selectPaletteColor('#ff375f')"></div>
+            <div class="color-swatch" style="background: #32ade6;" onclick="selectPaletteColor('#32ade6')"></div>
+            <div class="color-swatch" style="background: #ac8e68;" onclick="selectPaletteColor('#ac8e68')"></div>
+        </div>
+
+        <div style="margin-top: 15px; text-align: center; color: var(--text-muted); font-size: 12px;">sau</div>
+
+        <button class="custom-picker-btn" onclick="openNativePicker()">
+            <span style="font-size: 18px;">🎨</span> Selector Culoare Avansat
+        </button>
+        <input type="color" id="native-color-picker" onchange="handleNativeColorChange(event)">
     </div>
 
     <script>
@@ -620,36 +650,24 @@
         // ==========================================
 
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+        const auth = firebase.auth(), db = firebase.firestore();
+        let currentUser = null, transactions = [], customCats = { expense: [], income: [] };
+        let currentType = 'expense', chartInstance = null, editingCatId = null; // ID-ul categoriei pe care o edităm
 
-        let currentUser = null, transactions = [], customCategories = { expense: [], income: [] };
-        let currentType = 'expense', chartInstance = null;
-
-        const defaultCategories = {
+        const defaultCats = {
             expense: [
-                { id: 'food', name: 'Alimente', icon: '🛒', color: '#0a84ff' },
-                { id: 'home', name: 'Chirie', icon: '🏠', color: '#5e5ce6' },
-                { id: 'bills', name: 'Facturi & Utilități', icon: '💡', color: '#ff9f0a' },
-                { id: 'auto', name: 'Transport', icon: '🚗', color: '#ff453a' },
+                { id: 'food', name: 'Alimente', icon: '🛒', color: '#ff453a' },
+                { id: 'home', name: 'Casă', icon: '🏠', color: '#5e5ce6' },
+                { id: 'bills', name: 'Facturi', icon: '💡', color: '#ff9f0a' },
+                { id: 'auto', name: 'Transport', icon: '🚗', color: '#ac8e68' },
                 { id: 'health', name: 'Sănătate', icon: '💊', color: '#30d158' },
-                { id: 'personal', name: 'Îngrijire', icon: '💇‍♂️', color: '#bf5af2' },
-                { id: 'fun', name: 'Ieșiri', icon: '🍹', color: '#ff375f' },
-                { id: 'garden', name: 'Casă & Grădină', icon: '🪴', color: '#32ade6' },
-                { id: 'gifts', name: 'Cadouri', icon: '🎁', color: '#ffd60a' }
+                { id: 'fun', name: 'Ieșiri', icon: '🍹', color: '#ff375f' }
             ],
-            income: [
-                { id: 'salary', name: 'Salariu', icon: '💼', color: '#30d158' },
-                { id: 'savings', name: 'Economii', icon: '🏦', color: '#0a84ff' },
-                { id: 'bonus', name: 'Bonus', icon: '🎁', color: '#5e5ce6' }
-            ]
+            income: [{ id: 'salary', name: 'Salariu', icon: '💼', color: '#30d158' }]
         };
 
-        function getCategories() {
-            return {
-                expense: [...defaultCategories.expense, ...customCategories.expense],
-                income: [...defaultCategories.income, ...customCategories.income]
-            };
+        function getAllCats() {
+            return { expense: [...defaultCats.expense, ...customCats.expense], income: [...defaultCats.income, ...customCats.income] };
         }
 
         // --- AUTH ---
@@ -660,7 +678,7 @@
                 document.getElementById('app-container').style.display = 'block';
                 document.getElementById('user-display').innerText = user.email;
                 document.getElementById('tx-date').valueAsDate = new Date();
-                loadDataFromCloud();
+                loadData();
             } else {
                 currentUser = null;
                 document.getElementById('auth-overlay').style.display = 'flex';
@@ -672,174 +690,170 @@
         function loginUser() { auth.signInWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value).catch(() => document.getElementById('auth-error').innerText = "Date incorecte."); }
         function logoutUser() { auth.signOut(); }
 
-        // --- CLOUD ---
-        async function loadDataFromCloud() {
+        // --- DATA ---
+        async function loadData() {
             const doc = await db.collection('users').doc(currentUser.uid).get();
             if (doc.exists) {
                 const data = doc.data();
                 transactions = data.transactions || [];
-                customCategories = data.customCategories || { expense: [], income: [] };
+                customCats = data.customCats || { expense: [], income: [] };
             } else {
-                await db.collection('users').doc(currentUser.uid).set({ transactions: [], customCategories: { expense: [], income: [] } });
+                await db.collection('users').doc(currentUser.uid).set({ transactions: [], customCats: { expense: [], income: [] } });
             }
-            updateCategorySelect(); populateMonthFilter(); renderDashboard();
+            updateCatSelect(); populateMonthFilter(); renderDashboard();
         }
 
-        async function saveDataToCloud() {
-            await db.collection('users').doc(currentUser.uid).set({ transactions, customCategories });
-        }
+        async function saveData() { await db.collection('users').doc(currentUser.uid).set({ transactions, customCats }); }
 
-        // --- UI & MODAL ---
-        function toggleModal(show) {
-            const overlay = document.getElementById('modal-overlay');
-            const modal = document.getElementById('add-modal');
+        // --- UI MODALS ---
+        function toggleMainModal(show) {
+            const overlay = document.getElementById('ms-overlay-main'), modal = document.getElementById('modal-main');
             if (show) { overlay.classList.add('active'); modal.classList.add('active'); }
             else { overlay.classList.remove('active'); modal.classList.remove('active'); }
         }
 
-        function setTxType(type) {
-            currentType = type;
-            document.getElementById('btn-type-exp').className = type === 'expense' ? 'radio-btn active-exp' : 'radio-btn';
-            document.getElementById('btn-type-inc').className = type === 'income' ? 'radio-btn active-inc' : 'radio-btn';
-            updateCategorySelect();
+        // --- COLOR EDIT LOGIC ---
+        function openColorModal(catId) {
+            editingCatId = catId;
+            const cat = getAllCats().expense.find(c => c.id === catId);
+            if (!cat) return;
+
+            document.getElementById('color-cat-name').innerText = `${cat.icon} ${cat.name}`;
+            document.getElementById('native-color-picker').value = cat.color;
+
+            // Marcam culoarea activa in paleta daca exista
+            updatePaletteUI(cat.color);
+
+            // Adăugăm o clasă vizuală pe item-ul din legendă pentru a ști ce edităm
+            document.querySelectorAll('.legend-item').forEach(el => el.classList.remove('editing'));
+            document.getElementById(`leg-${catId}`).classList.add('editing');
+
+            document.getElementById('ms-overlay-color').classList.add('active');
+            document.getElementById('modal-color').classList.add('active');
         }
 
-        function updateCategorySelect() {
-            const select = document.getElementById('tx-category');
-            select.innerHTML = '';
-            getCategories()[currentType].forEach(cat => {
-                select.innerHTML += `<option value="${cat.id}">${cat.icon} ${cat.name}</option>`;
+        function closeColorModal() {
+            editingCatId = null;
+            document.querySelectorAll('.legend-item').forEach(el => el.classList.remove('editing'));
+            document.getElementById('ms-overlay-color').classList.remove('active');
+            document.getElementById('modal-color').classList.remove('active');
+        }
+
+        function updatePaletteUI(activeColor) {
+            document.querySelectorAll('.color-swatch').forEach(el => {
+                // Convertim culorile in format hex scurt sau lung pentru comparatie corecta
+                const swatchColor = rgbToHex(el.style.backgroundColor);
+                if (swatchColor === activeColor.toLowerCase()) el.classList.add('active');
+                else el.classList.remove('active');
             });
         }
 
-        function addCustomCategory() {
-            const name = prompt("Nume categorie nouă (ex: Netflix):"); if (!name) return;
-            const icon = prompt("Emoji (ex: 📺):") || "📌";
-            const colors = ['#0a84ff', '#5e5ce6', '#ff9f0a', '#ff453a', '#30d158', '#bf5af2', '#ff375f', '#32ade6'];
-            const color = colors[Math.floor(Math.random() * colors.length)];
-            customCategories[currentType].push({ id: 'c_' + Date.now(), name: name.trim(), icon, color });
-            updateCategorySelect(); saveDataToCloud();
+        // Helper: convertește rgb(x, y, z) primit din CSS în #hex
+        function rgbToHex(rgb) {
+            if (!rgb) return "";
+            const a = rgb.match(/\d+/g);
+            if (!a || a.length < 3) return "";
+            return "#" + ((1 << 24) + (parseInt(a[0]) << 16) + (parseInt(a[1]) << 8) + parseInt(a[2])).toString(16).slice(1);
         }
 
-        function handleTransactionSubmit(e) {
-            e.preventDefault();
-            const amount = parseFloat(document.getElementById('tx-amount').value);
-            const desc = document.getElementById('tx-desc').value.trim();
-            const category = document.getElementById('tx-category').value;
-            const date = document.getElementById('tx-date').value;
+        function applyNewColor(hexColor) {
+            if (!editingCatId) return;
 
-            transactions.unshift({ id: Date.now().toString(), type: currentType, amount, desc, category, date, timestamp: Date.now() });
-
-            // Vibrație scurtă dacă telefonul suportă
-            if (navigator.vibrate) navigator.vibrate(50);
-
-            document.getElementById('tx-amount').value = ''; document.getElementById('tx-desc').value = '';
-            toggleModal(false); // Ascunde formularul
-
-            populateMonthFilter(); renderDashboard(); saveDataToCloud();
-        }
-
-        function deleteTransaction(id) {
-            if (confirm("Ștergi această tranzacție?")) {
-                transactions = transactions.filter(t => t.id !== id);
-                populateMonthFilter(); renderDashboard(); saveDataToCloud();
+            // 1. Căutăm în categoriile custom
+            let catIndex = customCats.expense.findIndex(c => c.id === editingCatId);
+            if (catIndex !== -1) {
+                customCats.expense[catIndex].color = hexColor;
+            } else {
+                // 2. Dacă nu e custom, înseamnă că e default. 
+                // Pentru a o edita, trebuie să o mutăm în customCats.
+                const defIndex = defaultCats.expense.findIndex(c => c.id === editingCatId);
+                if (defIndex !== -1) {
+                    // Copiem categoria default, îi schimbăm culoarea și o punem la custom
+                    const newCustomCat = { ...defaultCats.expense[defIndex] };
+                    newCustomCat.color = hexColor;
+                    customCats.expense.push(newCustomCat);
+                    // Notă: ID-ul rămâne același ('food', 'home' etc.), deci tranzacțiile vechi rămân legate de ea,
+                    // dar getAllCats() va folosi varianta din customCats pentru că o punem *după* cele default în array.
+                    // REVIZUIRE LOGICĂ: getAllCats() trebuie modificată să prefere customCats în locul defaultCats dacă au același ID.
+                }
             }
+
+            // Haptic feedback
+            if (navigator.vibrate) navigator.vibrate(30);
+
+            saveData();
+            // Actualizăm interfața fără a închide modalul imediat (pentru a vedea schimbarea)
+            updatePaletteUI(hexColor);
+            renderDashboard(); // Re-randăm graficul și legenda cu noua culoare
         }
 
-        function populateMonthFilter() {
-            const select = document.getElementById('month-filter');
-            const curr = select.value; select.innerHTML = '<option value="all">Toate lunile</option>';
-            const mSet = new Set();
-            transactions.forEach(t => mSet.add(t.date.substring(0, 7)));
-            const now = new Date(); const cMY = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; mSet.add(cMY);
-            const names = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Noi", "Dec"];
-            Array.from(mSet).sort().reverse().forEach(my => {
-                const [y, m] = my.split('-');
-                const opt = document.createElement('option');
-                opt.value = my; opt.innerText = `📅 ${names[parseInt(m) - 1]} ${y}`;
-                if ((curr === '' && my === cMY) || my === curr) opt.selected = true;
-                select.appendChild(opt);
+        // Modificăm getAllCats pentru a suporta suprascrierea culorilor default
+        function getAllCats() {
+            const expenseCats = [...defaultCats.expense];
+            customCats.expense.forEach(cCat => {
+                const index = expenseCats.findIndex(dCat => dCat.id === cCat.id);
+                if (index !== -1) expenseCats[index] = cCat; // Suprascriem varianta default cu cea editată (custom)
+                else expenseCats.push(cCat); // Adăugăm categorie complet nouă
             });
-            if (select.value === '') select.value = cMY;
+
+            return { expense: expenseCats, income: [...defaultCats.income, ...customCats.income] };
         }
 
-        const fmt = (amt) => new Intl.NumberFormat('ro-RO').format(amt) + ' Lei';
-        function getCatInfo(t, id) { return getCategories()[t].find(c => c.id === id) || { name: 'Necunoscut', icon: '❓', color: '#8e8e93' }; }
+        function selectPaletteColor(color) {
+            applyNewColor(color);
+        }
+
+        function openNativePicker() { document.getElementById('native-color-picker').click(); }
+        function handleNativeColorChange(e) { applyNewColor(e.target.value); }
+
+        // --- TX LOGIC ---
+        function setTxType(t) { currentType = t; document.getElementById('btn-type-exp').className = t === 'expense' ? 'r-btn act-exp' : 'r-btn'; document.getElementById('btn-type-inc').className = t === 'income' ? 'r-btn act-inc' : 'r-btn'; updateCatSelect(); }
+        function updateCatSelect() { const s = document.getElementById('tx-category'); s.innerHTML = ''; getAllCats()[currentType].forEach(c => s.innerHTML += `<option value="${c.id}">${c.icon} ${c.name}</option>`); }
+        function addCustomCat() { const n = prompt("Nume categorie:"); if (!n) return; const i = prompt("Emoji:") || "📌"; const colors = ['#ff453a', '#ff9f0a', '#30d158', '#0a84ff', '#bf5af2']; customCats[currentType].push({ id: 'c_' + Date.now(), name: n.trim(), icon: i, color: colors[Math.floor(Math.random() * colors.length)] }); updateCatSelect(); saveData(); }
+        function handleTxSubmit(e) { e.preventDefault(); transactions.unshift({ id: Date.now().toString(), type: currentType, amount: parseFloat(document.getElementById('tx-amount').value), desc: document.getElementById('tx-desc').value.trim(), category: document.getElementById('tx-category').value, date: document.getElementById('tx-date').value, timestamp: Date.now() }); if (navigator.vibrate) navigator.vibrate(50); document.getElementById('tx-amount').value = ''; document.getElementById('tx-desc').value = ''; toggleMainModal(false); populateMonthFilter(); renderDashboard(); saveData(); }
+        function deleteTx(id) { if (confirm("Ștergi?")) { transactions = transactions.filter(t => t.id !== id); populateMonthFilter(); renderDashboard(); saveData(); } }
+
+        // --- RENDER & FILTERS ---
+        function populateMonthFilter() { const s = document.getElementById('month-filter'); const curr = s.value; s.innerHTML = '<option value="all">Toată perioada</option>'; const mSet = new Set(); transactions.forEach(t => mSet.add(t.date.substring(0, 7))); const now = new Date(); const cMY = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; mSet.add(cMY); Array.from(mSet).sort().reverse().forEach(my => { const [y, m] = my.split('-'); const names = ["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Noi", "Dec"]; const opt = document.createElement('option'); opt.value = my; opt.innerText = `${names[parseInt(m) - 1]} ${y}`; if ((curr === '' && my === cMY) || my === curr) opt.selected = true; s.appendChild(opt); }); if (s.value === '') s.value = cMY; }
+        const fmM = (a) => new Intl.NumberFormat('ro-RO').format(a) + ' Lei';
+        function getCat(t, id) { return getAllCats()[t].find(c => c.id === id) || { name: '?', icon: '❓', color: '#8e8e93' }; }
 
         function renderDashboard() {
             const f = document.getElementById('month-filter').value;
             let txs = f === 'all' ? transactions : transactions.filter(t => t.date.startsWith(f));
-            let inc = 0, exp = 0;
-            txs.forEach(t => t.type === 'income' ? inc += t.amount : exp += t.amount);
-
-            document.getElementById('total-balance').innerText = fmt(inc - exp);
-            document.getElementById('total-income').innerText = '+' + fmt(inc);
-            document.getElementById('total-expense').innerText = '-' + fmt(exp);
-
+            let inc = 0, exp = 0; txs.forEach(t => t.type === 'income' ? inc += t.amount : exp += t.amount);
+            document.getElementById('total-balance').innerText = fmM(inc - exp);
+            document.getElementById('total-income').innerText = '+' + fmM(inc);
+            document.getElementById('total-expense').innerText = '-' + fmM(exp);
             renderHistory(txs); updateChart(txs, exp);
         }
 
         function renderHistory(txs) {
             const list = document.getElementById('history-list'); list.innerHTML = '';
-            if (txs.length === 0) { list.innerHTML = '<div class="empty-state">Nu există tranzacții.</div>'; return; }
-            [...txs].sort((a, b) => b.timestamp - a.timestamp).forEach(t => {
-                const cat = getCatInfo(t.type, t.category); const isInc = t.type === 'income';
-                list.innerHTML += `
-                    <div class="h-item">
-                        <div class="h-left">
-                            <div class="h-icon" style="background: ${isInc ? 'rgba(48,209,88,0.15)' : 'rgba(255,69,58,0.15)'}; color: ${isInc ? 'var(--income)' : 'var(--expense)'}">${cat.icon}</div>
-                            <div class="h-text"><h4>${t.desc}</h4><p>${cat.name} • ${t.date.split('-').reverse().join('.')}</p></div>
-                        </div>
-                        <div class="h-right">
-                            <span class="h-amount" style="color: ${isInc ? 'var(--income)' : 'var(--text-main)'}">${isInc ? '+' : '-'}${fmt(t.amount)}</span>
-                            <button class="btn-delete" onclick="deleteTransaction('${t.id}')">Șterge</button>
-                        </div>
-                    </div>`;
+            if (txs.length === 0) { list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:14px;">Fără tranzacții.</div>'; return; }
+            [...txs].sort((a, b) => b.timestamp - a.timestamp).slice(0, 10).forEach(t => {
+                const cat = getCat(t.type, t.category); const isInc = t.type === 'income';
+                list.innerHTML += `<div class="h-item"><div class="h-left" style="display:flex;align-items:center;gap:15px;"><div class="h-icon" style="background:${isInc ? 'rgba(48,209,88,0.1)' : 'rgba(255,69,58,0.1)'};color:${isInc ? 'var(--income)' : 'var(--expense)'}">${cat.icon}</div><div><div style="font-weight:600;">${t.desc}</div><div class="h-date">${cat.name} • ${t.date.split('-').reverse().join('.')}</div></div></div><div class="h-right"><div class="h-amount" style="color:${isInc ? 'var(--income)' : 'var(--text-main)'}">${isInc ? '+' : '-'}${fmM(t.amount)}</div><button onclick="deleteTx('${t.id}')" style="background:none;border:none;color:var(--expense);font-size:11px;cursor:pointer;">Șterge</button></div></div>`;
             });
         }
 
         function updateChart(txs, totalExp) {
-            const ctx = document.getElementById('expenseChart').getContext('2d');
-            const legend = document.getElementById('custom-legend');
-            document.getElementById('chart-total').innerText = fmt(totalExp);
-
-            let map = {}; let hasData = false;
-            txs.forEach(t => { if (t.type === 'expense') { hasData = true; map[t.category] = (map[t.category] || 0) + t.amount; } });
-
+            const ctx = document.getElementById('expenseChart').getContext('2d'), leg = document.getElementById('legend-list');
+            document.getElementById('chart-total').innerText = fmM(totalExp);
+            let map = {}, hasData = false; txs.forEach(t => { if (t.type === 'expense') { hasData = true; map[t.category] = (map[t.category] || 0) + t.amount; } });
             document.getElementById('expenseChart').style.display = hasData ? 'block' : 'none';
-            document.getElementById('empty-chart-msg').style.display = hasData ? 'none' : 'block';
-            legend.innerHTML = '';
-
-            if (!hasData) return;
-
+            document.getElementById('chart-empty').style.display = hasData ? 'none' : 'block';
+            leg.innerHTML = ''; if (!hasData) return;
             const lbls = [], data = [], bgs = [];
-            // Sortăm categoriile descrescător după suma cheltuită pentru a arăta bine în legendă
-            const sortedCats = Object.keys(map).sort((a, b) => map[b] - map[a]);
-
-            sortedCats.forEach(id => {
-                const cat = getCatInfo('expense', id);
-                lbls.push(cat.name); data.push(map[id]); bgs.push(cat.color);
-
-                // Construim legenda cu procente
-                const percent = Math.round((map[id] / totalExp) * 100);
-                legend.innerHTML += `
-                    <div class="legend-item">
-                        <div class="legend-left">
-                            <div class="legend-color" style="background: ${cat.color}"></div>
-                            <span>${cat.icon} ${cat.name}</span>
-                        </div>
-                        <div class="legend-right">
-                            ${fmt(map[id])} <span class="legend-percent">(${percent}%)</span>
-                        </div>
-                    </div>`;
+            const sorted = Object.keys(map).sort((a, b) => map[b] - map[a]);
+            sorted.forEach(id => {
+                const cat = getCat('expense', id); lbls.push(cat.name); data.push(map[id]); bgs.push(cat.color);
+                const pct = totalExp > 0 ? Math.round((map[id] / totalExp) * 100) : 0;
+                // Legenda interactiva cu apel openColorModal
+                leg.innerHTML += `<div class="legend-item" id="leg-${cat.id}" onclick="openColorModal('${cat.id}')"><div class="l-left"><div class="l-color" style="background:${cat.color}"></div><span>${cat.icon} ${cat.name}</span><span class="edit-icon">⚙️</span></div><div class="l-right">${fmM(map[id])}<span class="l-p">(${pct}%)</span></div></div>`;
             });
-
             if (chartInstance) chartInstance.destroy();
-            chartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: lbls, datasets: [{ data, backgroundColor: bgs, borderWidth: 0, hoverOffset: 5 }] },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '80%', plugins: { legend: { display: false } } }
-            });
+            chartInstance = new Chart(ctx, { type: 'doughnut', data: { labels: lbls, datasets: [{ data, backgroundColor: bgs, borderWidth: 0, hoverOffset: 5 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '82%', plugins: { legend: { display: false } } } });
         }
     </script>
 </body>
