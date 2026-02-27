@@ -316,6 +316,7 @@
             align-items: center;
             box-shadow: 0 10px 30px rgba(10, 132, 255, 0.4);
             z-index: 100;
+            cursor: pointer;
         }
 
         .ms-overlay {
@@ -401,6 +402,7 @@
             font-weight: 700;
             color: var(--text-muted);
             border: 2px solid transparent;
+            cursor: pointer;
         }
 
         .r-btn.act-exp {
@@ -425,6 +427,7 @@
             font-size: 17px;
             font-weight: 700;
             margin-top: 10px;
+            cursor: pointer;
         }
 
         .btn-del {
@@ -438,6 +441,7 @@
             font-weight: 600;
             margin-top: 10px;
             display: none;
+            cursor: pointer;
         }
 
         .color-grid {
@@ -554,8 +558,15 @@
                     class="form-ctrl" placeholder="0.00" required step="0.01"></div>
             <div class="form-group"><label class="form-label">Descriere</label><input type="text" id="tx-desc"
                     class="form-ctrl" placeholder="Ex: Cumpărături..." required></div>
-            <div class="form-group"><label class="form-label">Categorie</label><select id="tx-category"
-                    class="form-ctrl" required></select></div>
+
+            <div class="form-group" style="display: flex; gap: 10px;">
+                <div style="flex: 1;"><label class="form-label">Categorie</label><select id="tx-category"
+                        class="form-ctrl" required></select></div>
+                <button type="button" onclick="addCustomCat()"
+                    style="margin-top: 28px; padding: 0 15px; border-radius: 12px; border: none; background: #2c2c2e; color: var(--accent); font-weight: bold; font-size: 13px; cursor: pointer;">+
+                    Nouă</button>
+            </div>
+
             <div class="form-group"><label class="form-label">Dată</label><input type="date" id="tx-date"
                     class="form-ctrl" required></div>
             <button type="submit" class="btn-sub" id="btn-save">Salvează</button>
@@ -569,7 +580,7 @@
         <div class="ms-drag"></div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3 style="font-size: 19px; font-weight: 800;">Alege Culoare</h3><button onclick="closeColorModal()"
-                style="background:none;border:none;color:var(--accent);font-weight:600;">Gata</button>
+                style="background:none;border:none;color:var(--accent);font-weight:600; cursor: pointer;">Gata</button>
         </div>
         <div class="color-grid" id="color-palette-grid">
             <div class="color-swatch" style="background: #ff453a;" onclick="applyColor('#ff453a')"></div>
@@ -620,8 +631,8 @@
             if (u) { currentUser = u; document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('app-container').style.display = 'block'; loadData(); }
             else { currentUser = null; document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('app-container').style.display = 'none'; }
         });
-        function registerUser() { auth.createUserWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value); }
-        function loginUser() { auth.signInWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value); }
+        function registerUser() { auth.createUserWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value).catch(err => document.getElementById('auth-error').innerText = err.message); }
+        function loginUser() { auth.signInWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value).catch(() => document.getElementById('auth-error').innerText = "Date incorecte."); }
         function logoutUser() { auth.signOut(); }
 
         async function loadData() {
@@ -661,6 +672,14 @@
 
         function setTxType(t) { currentType = t; document.getElementById('btn-type-exp').className = t === 'expense' ? 'r-btn act-exp' : 'r-btn'; document.getElementById('btn-type-inc').className = t === 'income' ? 'r-btn act-inc' : 'r-btn'; updateCatSelect(); }
         function updateCatSelect() { const s = document.getElementById('tx-category'); s.innerHTML = ''; getAllCats()[currentType].forEach(c => s.innerHTML += `<option value="${c.id}">${c.icon} ${c.name}</option>`); }
+
+        function addCustomCat() {
+            const n = prompt("Nume categorie nouă:"); if (!n) return;
+            const i = prompt("Emoji:") || "📌";
+            const colors = ['#ff453a', '#ff9f0a', '#30d158', '#0a84ff', '#bf5af2'];
+            customCats[currentType].push({ id: 'c_' + Date.now(), name: n.trim(), icon: i, color: colors[Math.floor(Math.random() * colors.length)] });
+            updateCatSelect(); saveData();
+        }
 
         function handleTxSubmit(e) {
             e.preventDefault();
@@ -712,7 +731,6 @@
             if (!txs.length) { list.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:14px;">Fără tranzacții.</div>'; return; }
             [...txs].sort((a, b) => b.timestamp - a.timestamp).forEach(t => {
                 const c = getCat(t.type, t.category), isInc = t.type === 'income';
-                // La click pe item, se deschide modalul de editare
                 list.innerHTML += `<div class="h-item" onclick="openTxModal('${t.id}')"><div style="display:flex;align-items:center;gap:12px;"><div class="h-icon">${c.icon}</div><div><div style="font-weight:600;font-size:15px;">${t.desc}</div><div class="h-date">${c.name} • ${t.date.split('-').reverse().join('.')}</div></div></div><div class="h-amount" style="color:${isInc ? 'var(--income)' : 'var(--text-main)'}">${isInc ? '+' : '-'}${fmM(t.amount)}</div></div>`;
             });
         }
