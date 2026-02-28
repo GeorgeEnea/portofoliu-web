@@ -58,7 +58,7 @@
 
         .auth-card {
             background: var(--bg-card);
-            padding: 30px;
+            padding: 35px 30px;
             border-radius: 28px;
             border: 1px solid var(--border);
             width: 90%;
@@ -69,9 +69,15 @@
 
         .auth-card h2 {
             font-size: 32px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             font-weight: 800;
             letter-spacing: -1px;
+        }
+
+        .auth-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 20px;
         }
 
         .auth-input {
@@ -101,17 +107,24 @@
             font-weight: bold;
             font-size: 16px;
             cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .auth-switch-wrapper {
+            margin-top: 25px;
+            font-size: 14px;
+            color: var(--text-muted);
         }
 
         .btn-auth-sec {
-            width: 100%;
             background: transparent;
             color: var(--accent);
             border: none;
-            padding: 15px;
             font-weight: 600;
             cursor: pointer;
-            margin-top: 5px;
+            padding: 0;
+            margin-left: 5px;
+            font-size: 14px;
         }
 
         #auth-error {
@@ -150,6 +163,7 @@
             border-radius: 12px;
             font-size: 12px;
             font-weight: bold;
+            cursor: pointer;
         }
 
         .filter-select {
@@ -490,12 +504,20 @@
 
     <div id="auth-overlay">
         <div class="auth-card">
-            <h2>NovaBudget</h2>
+            <h2 id="auth-title">Salutare! 👋</h2>
+            <p class="auth-subtitle" id="auth-subtitle">Introdu datele pentru a intra în cont.</p>
+
             <div id="auth-error"></div>
+
             <input type="email" id="auth-email" class="auth-input" placeholder="Email">
             <input type="password" id="auth-password" class="auth-input" placeholder="Parolă">
-            <button class="btn-auth" onclick="loginUser()">Intră în cont</button>
-            <button class="btn-auth-sec" onclick="registerUser()">Cont nou</button>
+
+            <button class="btn-auth" id="btn-main-auth" onclick="handleAuth()">Intră în cont</button>
+
+            <div class="auth-switch-wrapper">
+                <span id="auth-switch-text">Nu ai un cont?</span>
+                <button class="btn-auth-sec" id="btn-switch-auth" onclick="toggleAuthMode()">Creează cont</button>
+            </div>
         </div>
     </div>
 
@@ -598,7 +620,7 @@
 
     <script>
         // ==========================================
-        // CONFIGURARE FIREBASE - LIPEȘTE CHEILE AICI
+        // CONFIGURARE FIREBASE
         // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyCWkksla6aWzCuk_91Xw2TbyecBkoy0jTc",
@@ -615,9 +637,27 @@
         let currentUser = null, transactions = [], customCats = { expense: [], income: [] };
         let currentType = 'expense', chartInstance = null, colorEditCatId = null, editingTxId = null;
 
+        // Categorii Extinse
         const defaultCats = {
-            expense: [{ id: 'food', name: 'Alimente', icon: '🛒', color: '#ff453a' }, { id: 'home', name: 'Casă', icon: '🏠', color: '#5e5ce6' }, { id: 'bills', name: 'Facturi', icon: '💡', color: '#ff9f0a' }, { id: 'auto', name: 'Transport', icon: '🚗', color: '#ac8e68' }],
-            income: [{ id: 'salary', name: 'Salariu', icon: '💼', color: '#30d158' }]
+            expense: [
+                { id: 'food', name: 'Alimente', icon: '🛒', color: '#ff453a' },
+                { id: 'home', name: 'Casă', icon: '🏠', color: '#5e5ce6' },
+                { id: 'bills', name: 'Facturi', icon: '💡', color: '#ff9f0a' },
+                { id: 'auto', name: 'Transport', icon: '🚗', color: '#ac8e68' },
+                { id: 'health', name: 'Sănătate', icon: '💊', color: '#ff375f' },
+                { id: 'clothing', name: 'Îmbrăcăminte', icon: '👕', color: '#bf5af2' },
+                { id: 'entertainment', name: 'Divertisment', icon: '🍿', color: '#32ade6' },
+                { id: 'education', name: 'Educație', icon: '📚', color: '#0a84ff' },
+                { id: 'holidays', name: 'Vacanțe', icon: '✈️', color: '#ffd60a' },
+                { id: 'pets', name: 'Animale', icon: '🐶', color: '#ff9f0a' }
+            ],
+            income: [
+                { id: 'salary', name: 'Salariu', icon: '💼', color: '#30d158' },
+                { id: 'bonus', name: 'Bonus', icon: '🎉', color: '#0a84ff' },
+                { id: 'gifts', name: 'Cadouri', icon: '🎁', color: '#bf5af2' },
+                { id: 'sales', name: 'Vânzări', icon: '💰', color: '#ff9f0a' },
+                { id: 'investments', name: 'Investiții', icon: '📈', color: '#5e5ce6' }
+            ]
         };
 
         function getAllCats() {
@@ -626,15 +666,72 @@
             return { expense: expCats, income: [...defaultCats.income, ...customCats.income] };
         }
 
-        // AUTH & CLOUD
+        // ==========================================
+        // AUTH LOGIC
+        // ==========================================
+        let isLoginMode = true;
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('auth-error').innerText = "";
+            document.getElementById('auth-email').value = "";
+            document.getElementById('auth-password').value = "";
+
+            if (isLoginMode) {
+                document.getElementById('auth-title').innerText = "Salutare! 👋";
+                document.getElementById('auth-subtitle').innerText = "Introdu datele pentru a intra în cont.";
+                document.getElementById('btn-main-auth').innerText = "Intră în cont";
+                document.getElementById('auth-switch-text').innerText = "Nu ai un cont?";
+                document.getElementById('btn-switch-auth').innerText = "Creează cont";
+            } else {
+                document.getElementById('auth-title').innerText = "Cont Nou ✨";
+                document.getElementById('auth-subtitle').innerText = "Completează datele pentru a începe.";
+                document.getElementById('btn-main-auth').innerText = "Creează contul";
+                document.getElementById('auth-switch-text').innerText = "Ai deja un cont?";
+                document.getElementById('btn-switch-auth').innerText = "Intră aici";
+            }
+        }
+
+        function handleAuth() {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-password').value;
+            const errDiv = document.getElementById('auth-error');
+
+            if (!email || !pass) {
+                errDiv.innerText = "Te rog să completezi ambele câmpuri.";
+                return;
+            }
+
+            if (isLoginMode) {
+                auth.signInWithEmailAndPassword(email, pass).catch(() => errDiv.innerText = "Datele introduse sunt incorecte.");
+            } else {
+                auth.createUserWithEmailAndPassword(email, pass).catch(err => {
+                    if (err.code === 'auth/email-already-in-use') errDiv.innerText = "Acest email este deja folosit.";
+                    else if (err.code === 'auth/weak-password') errDiv.innerText = "Parola trebuie să aibă minim 6 caractere.";
+                    else errDiv.innerText = "A apărut o eroare. Încearcă din nou.";
+                });
+            }
+        }
+
         auth.onAuthStateChanged(u => {
-            if (u) { currentUser = u; document.getElementById('auth-overlay').style.display = 'none'; document.getElementById('app-container').style.display = 'block'; loadData(); }
-            else { currentUser = null; document.getElementById('auth-overlay').style.display = 'flex'; document.getElementById('app-container').style.display = 'none'; }
+            if (u) {
+                currentUser = u;
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                document.getElementById('user-display').innerText = u.email;
+                loadData();
+            } else {
+                currentUser = null;
+                document.getElementById('auth-overlay').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
+            }
         });
-        function registerUser() { auth.createUserWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value).catch(err => document.getElementById('auth-error').innerText = err.message); }
-        function loginUser() { auth.signInWithEmailAndPassword(document.getElementById('auth-email').value, document.getElementById('auth-password').value).catch(() => document.getElementById('auth-error').innerText = "Date incorecte."); }
+
         function logoutUser() { auth.signOut(); }
 
+        // ==========================================
+        // DATA LOGIC
+        // ==========================================
         async function loadData() {
             const doc = await db.collection('users').doc(currentUser.uid).get();
             if (doc.exists) { const d = doc.data(); transactions = d.transactions || []; customCats = d.customCats || { expense: [], income: [] }; }
@@ -642,13 +739,12 @@
         }
         async function saveData() { await db.collection('users').doc(currentUser.uid).set({ transactions, customCats }); }
 
-        // TRANZACTII - ADAUGARE SI EDITARE
         function openTxModal(txId = null) {
             editingTxId = txId;
             document.getElementById('ms-overlay-main').classList.add('active');
             document.getElementById('modal-main').classList.add('active');
 
-            if (txId) { // Mod Editare
+            if (txId) {
                 const tx = transactions.find(t => t.id === txId);
                 document.getElementById('modal-tx-title').innerText = "Editează Tranzacția";
                 document.getElementById('btn-save').innerText = "Actualizează";
@@ -657,8 +753,8 @@
                 document.getElementById('tx-amount').value = tx.amount;
                 document.getElementById('tx-desc').value = tx.desc;
                 document.getElementById('tx-date').value = tx.date;
-                setTimeout(() => document.getElementById('tx-category').value = tx.category, 50); // Așteaptă popularea select-ului
-            } else { // Mod Nou
+                setTimeout(() => document.getElementById('tx-category').value = tx.category, 50);
+            } else {
                 document.getElementById('modal-tx-title').innerText = "Tranzacție nouă";
                 document.getElementById('btn-save').innerText = "Salvează";
                 document.getElementById('btn-delete-tx').style.display = "none";
@@ -685,10 +781,10 @@
             e.preventDefault();
             const nTx = { type: currentType, amount: parseFloat(document.getElementById('tx-amount').value), desc: document.getElementById('tx-desc').value.trim(), category: document.getElementById('tx-category').value, date: document.getElementById('tx-date').value };
 
-            if (editingTxId) { // Actualizare
+            if (editingTxId) {
                 const i = transactions.findIndex(t => t.id === editingTxId);
                 transactions[i] = { ...transactions[i], ...nTx };
-            } else { // Creare
+            } else {
                 transactions.unshift({ id: Date.now().toString(), timestamp: Date.now(), ...nTx });
             }
 
@@ -703,7 +799,6 @@
             }
         }
 
-        // CULORI
         function openColorModal(id) { colorEditCatId = id; document.getElementById('ms-overlay-color').classList.add('active'); document.getElementById('modal-color').classList.add('active'); }
         function closeColorModal() { colorEditCatId = null; document.getElementById('ms-overlay-color').classList.remove('active'); document.getElementById('modal-color').classList.remove('active'); }
         function applyColor(hex) {
@@ -713,7 +808,6 @@
             if (navigator.vibrate) navigator.vibrate(30); closeColorModal(); renderDashboard(); saveData();
         }
 
-        // RENDER
         function populateMonthFilter() { const s = document.getElementById('month-filter'), curr = s.value; s.innerHTML = '<option value="all">Toată perioada</option>'; const mSet = new Set(); transactions.forEach(t => mSet.add(t.date.substring(0, 7))); const now = new Date(), cMY = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; mSet.add(cMY); Array.from(mSet).sort().reverse().forEach(my => { const [y, m] = my.split('-'); const opt = document.createElement('option'); opt.value = my; opt.innerText = `${["Ian", "Feb", "Mar", "Apr", "Mai", "Iun", "Iul", "Aug", "Sep", "Oct", "Noi", "Dec"][parseInt(m) - 1]} ${y}`; if ((curr === '' && my === cMY) || my === curr) opt.selected = true; s.appendChild(opt); }); if (s.value === '') s.value = cMY; }
         const fmM = a => new Intl.NumberFormat('ro-RO').format(a) + ' Lei';
         function getCat(t, id) { return getAllCats()[t].find(c => c.id === id) || { name: '?', icon: '❓', color: '#8e8e93' }; }
