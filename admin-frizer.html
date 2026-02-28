@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#09090b">
+    <title>AC BARBERSHOP - Admin</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #09090b;
+            --bg-card: rgba(28, 28, 30, 0.7);
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --gold: #d4af37;
+            --gold-hover: #b5952f;
+            --border: rgba(255, 255, 255, 0.05);
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1c 0%, #09090b 70%);
+            background-attachment: fixed;
+        }
+
+        #init-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            flex-direction: column;
+            transition: opacity 0.3s;
+        }
+
+        .spinner-gold {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-top: 3px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        #auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(9, 9, 11, 0.9);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .auth-card {
+            background: var(--bg-card);
+            padding: 40px 30px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            width: 90%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+        }
+
+        .auth-card h2 {
+            color: var(--gold);
+            margin-bottom: 5px;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .auth-card p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            margin-bottom: 25px;
+            padding: 5px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .auth-tab.active {
+            background: var(--gold);
+            color: black;
+        }
+
+        .auth-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .auth-input:focus {
+            border-color: var(--gold);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-auth {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 100%);
+            color: black;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+        }
+
+        .btn-auth:active {
+            transform: scale(0.98);
+        }
+
+        #auth-error {
+            color: var(--danger);
+            font-size: 13px;
+            margin-bottom: 15px;
+            min-height: 20px;
+            font-weight: 500;
+        }
+
+        #app-container {
+            display: none;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        /* Mai lat pentru PC */
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--text-main);
+            font-size: clamp(24px, 4vw, 32px);
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+        }
+
+        .header h1 span {
+            color: var(--gold);
+        }
+
+        .btn-logout {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+
+        .btn-logout:hover {
+            color: var(--text-main);
+            border-color: var(--text-main);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: clamp(20px, 4vw, 30px);
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+        }
+
+        .date-picker {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            outline: none;
+            transition: 0.3s;
+            cursor: pointer;
+            color-scheme: dark;
+        }
+
+        .date-picker:focus {
+            border-color: var(--gold);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-btn {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 14px;
+            text-transform: uppercase;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .quick-btn:hover {
+            background: rgba(212, 175, 55, 0.2);
+        }
+
+        .quick-btn:active {
+            background: var(--gold);
+            color: black;
+        }
+
+        .stats-divider {
+            margin-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-divider span {
+            color: var(--text-muted);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .stats-divider strong {
+            color: var(--gold);
+            font-size: 32px;
+            font-weight: 800;
+        }
+
+        /* Magia pentru PC: Cardurile se aliniază pe 2 coloane dacă ecranul e suficient de lat */
+        .appointments-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        @media (min-width: 800px) {
+            .appointments-list {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .app-card {
+            background: var(--bg-card);
+            border-left: 4px solid var(--gold);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-top: 1px solid rgba(255, 255, 255, 0.02);
+            border-right: 1px solid rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .app-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .app-header-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+        }
+
+        .app-time {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--gold);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            text-transform: uppercase;
+        }
+
+        .btn-delete:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .app-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .app-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .app-service {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            background: rgba(212, 175, 55, 0.15);
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            width: fit-content;
+        }
+
+        .app-contact {
+            display: flex;
+            gap: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+            flex-wrap: wrap;
+        }
+
+        .app-contact a {
+            color: #60a5fa;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(96, 165, 250, 0.1);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .app-contact a:hover {
+            background: rgba(96, 165, 250, 0.2);
+            transform: scale(1.05);
+        }
+
+        .app-email {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: var(--bg-card);
+            border-radius: 20px;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state h3 {
+            color: var(--text-main);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-top: 3px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="init-loader">
+        <div class="spinner-gold"></div>
+        <div style="margin-top: 15px; color: var(--gold); font-weight: bold; font-size: 13px; letter-spacing: 2px;">SE
+            ÎNCARCĂ...</div>
+    </div>
+
+    <div id="auth-overlay">
+        <div class="auth-card">
+            <h2>AC Barbershop</h2>
+            <p>Panoul de administrare securizat</p>
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="tab-login" onclick="switchAuthMode('login')">Autentificare</div>
+                <div class="auth-tab" id="tab-register" onclick="switchAuthMode('register')">Cont Nou</div>
+            </div>
+            <div id="auth-error"></div>
+            <input type="email" id="auth-email" class="auth-input" placeholder="Adresa de email">
+            <input type="password" id="auth-password" class="auth-input" placeholder="Parola administrator">
+            <button class="btn-auth" id="btn-auth-action" onclick="handleAuthAction()">Intră în cont</button>
+        </div>
+    </div>
+
+    <div id="app-container">
+        <div class="header">
+            <h1>AC <span>ADMIN</span></h1>
+            <button class="btn-logout" onclick="logoutAdmin()">Ieșire Cont</button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">Selectează Data</div>
+            <input type="date" id="admin-date" class="date-picker" onchange="loadAppointments()">
+
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="setDateOffset(0)">📅 Programările de Azi</button>
+                <button class="quick-btn" onclick="setDateOffset(1)">📅 Programările de Mâine</button>
+            </div>
+
+            <div class="stats-divider">
+                <span>Total Clienți:</span>
+                <strong id="total-apps">0</strong>
+            </div>
+        </div>
+
+        <div id="loading-spinner" class="spinner"></div>
+
+        <div class="appointments-list" id="appointments-container"></div>
+    </div>
+
+    <script>
+        // ==========================================
+        // PUNE CHEILE FIREBASE AICI!
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9azVede7kMPS0cV11ErmlEeUvnfrNNeU",
+            authDomain: "barbershop-app-7a315.firebaseapp.com",
+            projectId: "barbershop-app-7a315",
+            storageBucket: "barbershop-app-7a315.firebasestorage.app",
+            messagingSenderId: "295715220500",
+            appId: "1:295715220500:web:3f01e3aca9f694da990b01"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let currentAuthMode = 'login';
+
+        auth.onAuthStateChanged(user => {
+            document.getElementById('init-loader').style.opacity = '0';
+            setTimeout(() => document.getElementById('init-loader').style.display = 'none', 300);
+
+            if (user && !user.isAnonymous) {
+                document.getElementById('auth-overlay').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                initAdminPanel();
+            } else {
+                document.getElementById('auth-overlay').style.display = 'flex';
+                document.getElementById('app-container').style.display = 'none';
+            }
+        });
+
+        function switchAuthMode(mode) {
+            currentAuthMode = mode; document.getElementById('auth-error').innerText = '';
+            if (mode === 'login') {
+                document.getElementById('tab-login').classList.add('active'); document.getElementById('tab-register').classList.remove('active');
+                document.getElementById('btn-auth-action').innerText = "Intră în cont";
+            } else {
+                document.getElementById('tab-register').classList.add('active'); document.getElementById('tab-login').classList.remove('active');
+                document.getElementById('btn-auth-action').innerText = "Creează Cont Admin";
+            }
+        }
+
+        function handleAuthAction() {
+            const email = document.getElementById('auth-email').value.trim(); const pass = document.getElementById('auth-password').value.trim();
+            const errorDiv = document.getElementById('auth-error');
+            if (!email || !pass) { errorDiv.innerText = "Completează toate câmpurile!"; return; }
+            if (currentAuthMode === 'login') {
+                auth.signInWithEmailAndPassword(email, pass).catch(err => { errorDiv.innerText = "Date incorecte."; });
+            } else {
+                if (pass.length < 6) { errorDiv.innerText = "Parola minim 6 caractere."; return; }
+                auth.createUserWithEmailAndPassword(email, pass).catch(err => { errorDiv.innerText = err.message; });
+            }
+        }
+
+        function logoutAdmin() { auth.signOut(); }
+
+        function initAdminPanel() { setDateOffset(0); }
+
+        function setDateOffset(daysToAdd) {
+            const date = new Date(); date.setDate(date.getDate() + daysToAdd);
+            const y = date.getFullYear(), m = String(date.getMonth() + 1).padStart(2, '0'), d = String(date.getDate()).padStart(2, '0');
+            document.getElementById('admin-date').value = `${y}-${m}-${d}`;
+            loadAppointments();
+        }
+
+        async function loadAppointments() {
+            const selectedDate = document.getElementById('admin-date').value;
+            const container = document.getElementById('appointments-container');
+            const spinner = document.getElementById('loading-spinner');
+            if (!selectedDate) return;
+
+            container.innerHTML = ''; spinner.style.display = 'block';
+
+            try {
+                const snapshot = await db.collection('appointments').where('date', '==', selectedDate).get();
+                let appointments = [];
+                snapshot.forEach(doc => { appointments.push({ id: doc.id, ...doc.data() }); });
+                appointments.sort((a, b) => a.time.localeCompare(b.time));
+
+                spinner.style.display = 'none';
+                document.getElementById('total-apps').innerText = appointments.length;
+
+                if (appointments.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><h3>Nicio programare 😴</h3><p>Nu ai niciun client programat în această dată.</p></div>`;
+                    return;
+                }
+
+                appointments.forEach(app => {
+                    const emailBadge = app.clientEmail ? `<span class="app-email">✉️ ${app.clientEmail}</span>` : '';
+                    container.innerHTML += `
+                        <div class="app-card" id="app-${app.id}">
+                            <div class="app-header-row">
+                                <div class="app-time">${app.time}</div>
+                                <button class="btn-delete" onclick="deleteAppointment('${app.id}', '${app.clientName}', '${app.time}')">❌ Anulează</button>
+                            </div>
+                            <div class="app-details">
+                                <div class="app-name">${app.clientName}</div>
+                                <div class="app-service">${app.clientService}</div>
+                                <div class="app-contact">
+                                    <a href="tel:${app.clientPhone}">📞 ${app.clientPhone}</a>
+                                    ${emailBadge}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                spinner.style.display = 'none';
+                container.innerHTML = `<div class="empty-state"><h3 style="color:var(--danger)">Eroare de conexiune</h3></div>`;
+            }
+        }
+
+        async function deleteAppointment(docId, clientName, time) {
+            if (confirm(`Sigur vrei să anulezi programarea lui ${clientName} de la ora ${time}?`)) {
+                try {
+                    await db.collection('appointments').doc(docId).delete();
+                    loadAppointments();
+                } catch (e) { alert("Eroare la ștergere."); }
+            }
+        }
+    </script>
+</body>
+
+</html>

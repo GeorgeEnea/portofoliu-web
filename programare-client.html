@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#09090b">
+    <title>AC BARBERSHOP - Programare</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #09090b;
+            --bg-card: rgba(28, 28, 30, 0.7);
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --gold: #d4af37;
+            --gold-hover: #b5952f;
+            --border: rgba(255, 255, 255, 0.05);
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 50px;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1c 0%, #09090b 70%);
+            background-attachment: fixed;
+        }
+
+        .app-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Centrare elegantă pe PC */
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            margin-top: 10px;
+        }
+
+        .header h1 {
+            font-size: clamp(28px, 5vw, 40px);
+            color: var(--text-main);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+        }
+
+        .header h1 span {
+            color: var(--gold);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: clamp(20px, 4vw, 35px);
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(20px);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--gold);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+        }
+
+        .date-picker {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            outline: none;
+            margin-bottom: 25px;
+            transition: 0.3s;
+            cursor: pointer;
+            color-scheme: dark;
+        }
+
+        .date-picker:focus {
+            border-color: var(--gold);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+        }
+
+        /* Magia pentru PC vs Telefon: auto-fit pune atâtea butoane câte încap! */
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 12px;
+        }
+
+        .slot-btn {
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 15px 5px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .slot-btn.available:hover {
+            border-color: rgba(212, 175, 55, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .slot-btn.available:active {
+            transform: scale(0.95);
+        }
+
+        .slot-btn.booked {
+            background: rgba(0, 0, 0, 0.5);
+            color: #444;
+            border-color: transparent;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
+
+        .slot-btn.selected {
+            background: var(--gold);
+            color: black;
+            border-color: var(--gold);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+        }
+
+        #booking-form {
+            display: none;
+            margin-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 25px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Formular pe PC se împarte în 2 coloane, pe telefon stă pe 1 coloană */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .input-field {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: var(--gold);
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-hover) 100%);
+            color: black;
+            border: none;
+            padding: 18px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+            margin-top: 10px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        #my-bookings-section {
+            display: none;
+            margin-bottom: 25px;
+        }
+
+        .my-booking-card {
+            background: var(--bg-card);
+            border-left: 4px solid var(--gold);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .my-booking-info {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .my-booking-info strong {
+            color: var(--text-main);
+            font-size: 20px;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .my-booking-info span {
+            color: var(--gold);
+            font-weight: 600;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+
+        .booking-actions {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-cancel {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .btn-cancel:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-reschedule {
+            background: rgba(212, 175, 55, 0.1);
+            color: var(--gold);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+
+        .btn-reschedule:hover {
+            background: var(--gold);
+            color: black;
+        }
+
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(9, 9, 11, 0.95);
+            backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            text-align: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .success-box {
+            background: var(--bg-card);
+            padding: 40px 30px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .success-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .success-box h2 {
+            color: var(--gold);
+            font-size: 26px;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .success-box p {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .btn-close {
+            width: 100%;
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #init-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            flex-direction: column;
+            transition: opacity 0.3s;
+        }
+
+        .spinner-gold {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-top: 3px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(212, 175, 55, 0.2);
+            border-top: 3px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="init-loader">
+        <div class="spinner-gold"></div>
+        <div style="margin-top: 15px; color: var(--gold); font-weight: bold; font-size: 13px; letter-spacing: 2px;">SE
+            VERIFICĂ DISPONIBILITATEA...</div>
+    </div>
+
+    <div class="app-wrapper">
+        <div class="header">
+            <h1>AC <span>BARBERSHOP</span></h1>
+            <p>Experiența tunsului la superlativ.</p>
+        </div>
+
+        <div id="my-bookings-section">
+            <h3
+                style="color: var(--text-main); font-size: 15px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                <span
+                    style="display:inline-block; width:8px; height:8px; background:#30d158; border-radius:50%; box-shadow: 0 0 10px #30d158;"></span>
+                Programările Tale Active
+            </h3>
+            <div id="my-bookings-container"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">1. Alege data dorită</div>
+            <input type="date" id="select-date" class="date-picker" onchange="loadSlots()">
+
+            <div class="card-title" style="margin-top: 10px;">2. Alege ora</div>
+            <div id="loading-spinner" class="spinner"></div>
+            <div class="slots-grid" id="slots-container"></div>
+
+            <div id="booking-form">
+                <div class="card-title">3. Detaliile tale</div>
+                <div class="form-grid">
+                    <input type="text" id="client-name" class="input-field" placeholder="Numele complet" required>
+                    <input type="tel" id="client-phone" class="input-field" placeholder="Număr de telefon" required>
+                    <input type="email" id="client-email" class="input-field" placeholder="Adresă de Email (opțional)">
+                    <input type="text" id="client-service" class="input-field" placeholder="Serviciu (ex: Tuns + Barbă)"
+                        required>
+                </div>
+                <button class="btn-submit" id="btn-confirm" onclick="confirmBooking()">Confirmă Programarea</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-overlay" id="success-modal">
+        <div class="success-box">
+            <div class="success-icon">✨</div>
+            <h2>Programare Confirmată!</h2>
+            <p>Locul tău a fost rezervat cu succes. Te așteptăm cu drag la data și ora stabilită pentru o experiență
+                VIP.</p>
+            <button class="btn-close" onclick="resetApp()">ÎNAPOI LA CALENDAR</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // PUNE CHEILE FIREBASE AICI!
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9azVede7kMPS0cV11ErmlEeUvnfrNNeU",
+            authDomain: "barbershop-app-7a315.firebaseapp.com",
+            projectId: "barbershop-app-7a315",
+            storageBucket: "barbershop-app-7a315.firebasestorage.app",
+            messagingSenderId: "295715220500",
+            appId: "1:295715220500:web:3f01e3aca9f694da990b01"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        const startHour = 9, endHour = 19;
+        let selectedSlot = null;
+        let myClientId = null;
+
+        auth.signInAnonymously().catch(error => console.error("Eroare Auth:", error));
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                myClientId = user.uid;
+                loadMyBookings().then(() => {
+                    document.getElementById('init-loader').style.opacity = '0';
+                    setTimeout(() => document.getElementById('init-loader').style.display = 'none', 300);
+                });
+            }
+        });
+
+        window.onload = () => {
+            const dateInput = document.getElementById('select-date');
+            const today = new Date();
+            const twoWeeks = new Date();
+            twoWeeks.setDate(today.getDate() + 14);
+
+            const formatDate = (dateObj) => {
+                const y = dateObj.getFullYear();
+                const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const d = String(dateObj.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            };
+
+            const todayStr = formatDate(today);
+            dateInput.min = todayStr; dateInput.max = formatDate(twoWeeks); dateInput.value = todayStr;
+            loadSlots();
+        };
+
+        async function loadMyBookings() {
+            if (!myClientId) return;
+            const container = document.getElementById('my-bookings-container');
+            const section = document.getElementById('my-bookings-section');
+            container.innerHTML = '';
+
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            try {
+                const snapshot = await db.collection('appointments').where('clientId', '==', myClientId).get();
+                let hasActiveBookings = false;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.date >= todayStr) {
+                        hasActiveBookings = true;
+                        container.innerHTML += `
+                            <div class="my-booking-card" id="booking-${doc.id}">
+                                <div class="my-booking-info">
+                                    <strong>${data.date.split('-').reverse().join('.')} — Ora ${data.time}</strong>
+                                    Serviciu: <span>${data.clientService}</span>
+                                </div>
+                                <div class="booking-actions">
+                                    <button class="btn-action btn-cancel" onclick="cancelBooking('${doc.id}')">Anulează</button>
+                                    <button class="btn-action btn-reschedule" onclick="rescheduleBooking('${doc.id}', '${data.clientName}', '${data.clientPhone}', '${data.clientEmail || ''}', '${data.clientService}')">Mută ora</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                section.style.display = hasActiveBookings ? 'block' : 'none';
+            } catch (e) { console.error("Eroare bilete:", e); }
+        }
+
+        async function cancelBooking(docId) {
+            if (confirm("Ești sigur că vrei să anulezi programarea?")) {
+                try {
+                    await db.collection('appointments').doc(docId).delete();
+                    loadMyBookings(); loadSlots();
+                } catch (e) { alert("Eroare la ștergere."); }
+            }
+        }
+
+        async function rescheduleBooking(docId, name, phone, email, service) {
+            if (confirm("Pentru a reprograma, programarea actuală va fi anulată. Continui?")) {
+                try {
+                    await db.collection('appointments').doc(docId).delete();
+                    document.getElementById('client-name').value = name;
+                    document.getElementById('client-phone').value = phone;
+                    document.getElementById('client-email').value = email || '';
+                    document.getElementById('client-service').value = service;
+
+                    loadMyBookings(); loadSlots();
+                    alert("Alege o nouă dată și oră din calendar!");
+                    document.getElementById('select-date').scrollIntoView({ behavior: 'smooth' });
+                } catch (e) { alert("Eroare la reprogramare."); }
+            }
+        }
+
+        async function loadSlots() {
+            const dateStr = document.getElementById('select-date').value;
+            const container = document.getElementById('slots-container');
+            const spinner = document.getElementById('loading-spinner');
+
+            container.innerHTML = ''; document.getElementById('booking-form').style.display = 'none'; selectedSlot = null;
+            if (!dateStr) return;
+
+            spinner.style.display = 'block';
+            let allSlots = [];
+            for (let h = startHour; h < endHour; h++) {
+                allSlots.push(`${h < 10 ? '0' + h : h}:00`); allSlots.push(`${h < 10 ? '0' + h : h}:30`);
+            }
+
+            let bookedSlots = [];
+            try {
+                const snapshot = await db.collection('appointments').where('date', '==', dateStr).get();
+                snapshot.forEach(doc => bookedSlots.push(doc.data().time));
+            } catch (e) { console.error(e); }
+
+            spinner.style.display = 'none';
+
+            allSlots.forEach(time => {
+                const btn = document.createElement('div');
+                btn.className = 'slot-btn ' + (bookedSlots.includes(time) ? 'booked' : 'available');
+                btn.innerText = time;
+                if (!bookedSlots.includes(time)) btn.onclick = () => selectTime(btn, time);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectTime(clickedBtn, time) {
+            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+            clickedBtn.classList.add('selected'); selectedSlot = time;
+            document.getElementById('booking-form').style.display = 'block';
+            setTimeout(() => { document.getElementById('booking-form').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 100);
+        }
+
+        async function confirmBooking() {
+            const date = document.getElementById('select-date').value;
+            const name = document.getElementById('client-name').value.trim();
+            const phone = document.getElementById('client-phone').value.trim();
+            const email = document.getElementById('client-email').value.trim();
+            const service = document.getElementById('client-service').value.trim();
+
+            if (!name || !phone || !service) { alert("Completează numele, telefonul și serviciul dorit!"); return; }
+
+            const btn = document.getElementById('btn-confirm');
+            btn.innerText = "SE PROCESEAZĂ..."; btn.disabled = true;
+
+            try {
+                await db.collection('appointments').add({
+                    clientId: myClientId, date: date, time: selectedSlot,
+                    clientName: name, clientPhone: phone, clientEmail: email, clientService: service,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('success-modal').style.display = 'flex';
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                loadMyBookings();
+            } catch (error) { alert("Eroare la conexiune."); }
+
+            btn.innerText = "CONFIRMĂ PROGRAMAREA"; btn.disabled = false;
+        }
+
+        function resetApp() {
+            document.getElementById('success-modal').style.display = 'none';
+            document.getElementById('client-name').value = ''; document.getElementById('client-phone').value = '';
+            document.getElementById('client-email').value = ''; document.getElementById('client-service').value = '';
+            loadSlots(); window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+
+</html>
